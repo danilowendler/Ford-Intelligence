@@ -1,0 +1,105 @@
+import { create } from 'zustand';
+import * as SecureStore from 'expo-secure-store';
+import {
+  login as loginApi,
+  signup as signupApi,
+  type AuthUser,
+  type LoginPayload,
+  type SignupPayload,
+} from '@/services/mocks/authApi';
+
+const TOKEN_KEY = 'ford.auth.token';
+const USER_KEY = 'ford.auth.user';
+
+export type AuthStatus =
+  | 'idle'
+  | 'hydrating'
+  | 'authenticating'
+  | 'authenticated'
+  | 'unauthenticated';
+
+type AuthState = {
+  status: AuthStatus;
+  token: string | null;
+  user: AuthUser | null;
+  error: string | null;
+  hydrate: () => Promise<void>;
+  login: (payload: LoginPayload) => Promise<void>;
+  signup: (payload: SignupPayload) => Promise<void>;
+  logout: () => Promise<void>;
+  clearError: () => void;
+};
+
+async function persistSession(token: string, user: AuthUser) {
+  await SecureStore.setItemAsync(TOKEN_KEY, token);
+  await SecureStore.setItemAsync(USER_KEY, JSON.stringify(user));
+}
+
+async function clearSession() {
+  await SecureStore.deleteItemAsync(TOKEN_KEY);
+  await SecureStore.deleteItemAsync(USER_KEY);
+}
+
+export const useAuthStore = create<AuthState>((set) => ({
+  status: 'idle',
+  token: null,
+  user: null,
+  error: null,
+
+  hydrate: async () => {
+    set({ status: 'hydrating' });
+    try {
+      const [token, rawUser] = await Promise.all([
+        SecureStore.getItemAsync(TOKEN_KEY),
+        SecureStore.getItemAsync(USER_KEY),
+      ]);
+      if (token && rawUser) {
+        set({
+          status: 'authenticated',
+          token,
+          user: JSON.parse(rawUser) as AuthUser,
+          error: null,
+        });
+      } else {
+        set({ status: 'unauthenticated', token: null, user: null });
+      }
+    } catch {
+      set({ status: 'unauthenticated', token: null, user: null });
+    }
+  },
+
+  login: async (payload) => {
+    set({ status: 'authenticating', error: null });
+    try {
+      const { token, user } = await loginApi(payload);
+      await persistSession(token, user);
+      set({ status: 'authenticated', token, user, error: null });
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Falha ao entrar. Tente novamente.';
+      set({ status: 'unauthenticated', error: message });
+      throw err;
+    }
+  },
+
+  signup: async (payload) => {
+    set({ status: 'authenticating', error: null });
+    try {
+      const { token, user } = await signupApi(payload);
+      await persistSession(token, user);
+      set({ status: 'authenticated', token, user, error: null });
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Falha ao criar conta.';
+      set({ status: 'unauthenticated', error: message });
+      throw err;
+    }
+  },
+
+  logout: async () => {
+    await clearSession();
+    set({ status: 'unauthenticated', token: null, user: null, error: null });
+  },
+
+  clearError: () => set({ error: null }),
+}));
