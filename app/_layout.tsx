@@ -13,6 +13,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemeProvider } from '@/theme/ThemeProvider';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useUserStore } from '@/stores/useUserStore';
+import { usePlanStore } from '@/stores/usePlanStore';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import 'react-native-reanimated';
 
@@ -49,22 +51,34 @@ export default function RootLayout() {
   });
 
   const status = useAuthStore((s) => s.status);
-  const hydrate = useAuthStore((s) => s.hydrate);
+  const hydrateAuth = useAuthStore((s) => s.hydrate);
+  const hydrateUser = useUserStore((s) => s.hydrate);
+  const userHydrated = useUserStore((s) => s.hydrated);
+  const userProfile = useUserStore((s) => s.profile);
+  const setPlan = usePlanStore((s) => s.setPlan);
   const [hydrated, setHydrated] = useState(false);
   const hydrateOnce = useRef(false);
 
   useEffect(() => {
     if (!hydrateOnce.current && status === 'idle') {
       hydrateOnce.current = true;
-      hydrate();
+      hydrateAuth();
+      hydrateUser();
     }
-  }, [status, hydrate]);
+  }, [status, hydrateAuth, hydrateUser]);
 
   useEffect(() => {
-    if (!hydrated && (status === 'authenticated' || status === 'unauthenticated')) {
+    if (userProfile?.plan) {
+      setPlan(userProfile.plan);
+    }
+  }, [userProfile?.plan, setPlan]);
+
+  useEffect(() => {
+    const authReady = status === 'authenticated' || status === 'unauthenticated';
+    if (!hydrated && authReady && userHydrated) {
       setHydrated(true);
     }
-  }, [status, hydrated]);
+  }, [status, userHydrated, hydrated]);
 
   const ready = (fontsLoaded || fontError) && hydrated;
 
