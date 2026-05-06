@@ -22,20 +22,21 @@ Plano operacional dividido em milestones incrementais. Cada milestone tem **bran
 **Objetivo:** Inicializar projeto Expo + TypeScript + Expo Router e instalar dependências core.
 
 ### Entregas
-- [ ] `npx create-expo-app@latest Mobile-Ford --template default` (managed)
-- [ ] Habilitar **TypeScript strict** em `tsconfig.json`
-- [ ] Configurar **Expo Router** (já vem no template default)
-- [ ] Configurar alias `@/*` → `./src/*` (`tsconfig.json` + `babel.config.js`)
-- [ ] Instalar deps core: `zustand`, `react-hook-form`, `zod`, `expo-blur`, `expo-secure-store`, `@react-native-async-storage/async-storage`, `react-native-reanimated`, `moti`
-- [ ] Instalar deps 3D: `three`, `expo-gl`, `@react-three/fiber`
-- [ ] Instalar deps mapas: `react-native-maps`
-- [ ] Instalar `@expo/vector-icons` (já incluso no Expo)
-- [ ] Configurar ESLint + Prettier (`eslint-config-expo` + `prettier`)
-- [ ] Criar estrutura de pastas conforme [CLAUDE.md](../CLAUDE.md#folder-structure)
-- [ ] `.gitignore`, `.env.example`, `README.md` mínimo
-- [ ] `app.json` com nome "Ford Intelligence", slug, ícone placeholder, splash dark
-- [ ] Smoke test: `npx expo start` abre app em branco sem erros
+- [x] `npx create-expo-app@latest Mobile-Ford --template default` (managed)
+- [x] Habilitar **TypeScript strict** em `tsconfig.json`
+- [x] Configurar **Expo Router** (já vem no template default)
+- [x] Configurar alias `@/*` → `./src/*` (`tsconfig.json`; em SDK 54 o Metro honra paths sem babel plugin)
+- [x] Instalar deps core: `zustand`, `react-hook-form`, `zod`, `expo-blur`, `expo-secure-store`, `@react-native-async-storage/async-storage`, `react-native-reanimated`, `moti`
+- [x] Instalar deps 3D: `three`, `expo-gl`, `@react-three/fiber`
+- [x] Instalar deps mapas: `react-native-maps`
+- [x] Instalar `@expo/vector-icons` (já incluso no Expo)
+- [x] Configurar ESLint + Prettier (`eslint-config-expo` + `prettier`)
+- [x] Criar estrutura de pastas conforme [CLAUDE.md](../CLAUDE.md#folder-structure)
+- [x] `.gitignore`, `.env.example`, `README.md` mínimo
+- [x] `app.json` com nome "Ford Intelligence", slug, ícone placeholder, splash dark
+- [x] Smoke test: `npx expo start` abre app em branco sem erros
 
+**Status:** ✅ Concluído — commit `8ea8ee4` na branch `chore/m0-setup`
 **Commit final:** `chore(setup): bootstrap Expo + TS + Expo Router + base deps`
 
 ---
