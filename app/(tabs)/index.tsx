@@ -1,31 +1,23 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Link } from 'expo-router';
+import { View } from 'react-native';
+import { Button, Screen, Text } from '@/components';
+import { useTheme } from '@/theme/ThemeProvider';
 
 export default function HomeScreen() {
+  const theme = useTheme();
   return (
-    <View style={styles.container}>
-      <Text style={styles.brand}>Ford Intelligence</Text>
-      <Text style={styles.subtitle}>M0 — Setup & Fundações</Text>
-    </View>
+    <Screen>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: theme.spacing.sm }}>
+        <Text variant="h1">Ford Intelligence</Text>
+        <Text variant="body" color="muted">
+          M1 — Design System & Tema
+        </Text>
+      </View>
+      {__DEV__ ? (
+        <Link href="/_dev/design-system" asChild>
+          <Button label="Abrir Design System (DEV)" variant="secondary" />
+        </Link>
+      ) : null}
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#0A0E14',
-    paddingHorizontal: 24,
-  },
-  brand: {
-    color: '#F5F7FA',
-    fontSize: 28,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  subtitle: {
-    color: '#8A93A6',
-    fontSize: 14,
-    marginTop: 8,
-  },
-});

@@ -47,23 +47,24 @@ Plano operacional dividido em milestones incrementais. Cada milestone tem **bran
 **Objetivo:** Implementar tokens de design, paleta Ford, tipografia e componentes-base reutilizáveis.
 
 ### Entregas
-- [ ] `src/theme/tokens.ts` — cores base, espaçamentos, raios, sombras, blurs
-- [ ] `src/theme/plans.ts` — variantes Agro / Urban / Premium (acentos)
-- [ ] `src/theme/typography.ts` — escala tipográfica (h1–caption)
-- [ ] `src/theme/ThemeProvider.tsx` — context/hook `useTheme()` consumindo Zustand `usePlanStore`
-- [ ] Carregar fontes via `expo-font` em `app/_layout.tsx` (Inter ou Ford Antenna)
-- [ ] Componentes base em `src/components/`:
-  - [ ] `Text` (variantes h1/h2/h3/body/caption)
-  - [ ] `Button` (primary/secondary/ghost + ícone opcional)
-  - [ ] `GlassPanel` (wrapper `expo-blur` + borda sutil)
-  - [ ] `Card`
-  - [ ] `Input` (integrado com `react-hook-form`)
-  - [ ] `Badge` (status/alert)
-  - [ ] `Icon` (wrapper `@expo/vector-icons`)
-  - [ ] `Screen` (SafeArea + bg base)
-- [ ] `src/stores/usePlanStore.ts` (Zustand) com plano atual + setter
-- [ ] Tela de showcase `app/_dev/design-system.tsx` listando todos os componentes (apenas em DEV)
+- [x] `src/theme/tokens.ts` — cores base, espaçamentos, raios, sombras, blurs
+- [x] `src/theme/plans.ts` — variantes Agro / Urban / Premium (acentos)
+- [x] `src/theme/typography.ts` — escala tipográfica (h1–caption)
+- [x] `src/theme/ThemeProvider.tsx` — context/hook `useTheme()` consumindo Zustand `usePlanStore`
+- [x] Carregar fontes via `expo-font` em `app/_layout.tsx` (Inter ou Ford Antenna)
+- [x] Componentes base em `src/components/`:
+  - [x] `Text` (variantes h1/h2/h3/body/caption)
+  - [x] `Button` (primary/secondary/ghost + ícone opcional)
+  - [x] `GlassPanel` (wrapper `expo-blur` + borda sutil)
+  - [x] `Card`
+  - [x] `Input` (integrado com `react-hook-form`)
+  - [x] `Badge` (status/alert)
+  - [x] `Icon` (wrapper `@expo/vector-icons`)
+  - [x] `Screen` (SafeArea + bg base)
+- [x] `src/stores/usePlanStore.ts` (Zustand) com plano atual + setter
+- [x] Tela de showcase `app/_dev/design-system.tsx` listando todos os componentes (apenas em DEV)
 
+**Status:** ✅ Concluído — branch `feat/m1-design-system`
 **Commit final:** `feat(design-system): tokens, theme provider e componentes base`
 
 ---
