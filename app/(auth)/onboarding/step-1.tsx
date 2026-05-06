@@ -1,8 +1,8 @@
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { MotiView } from 'moti';
 import { Button, Icon, Screen, Text } from '@/components';
 import { StepIndicator } from '@/features/onboarding/StepIndicator';
+import { FadeRise } from '@/features/onboarding/AnimatedMount';
 import { useTheme } from '@/theme/ThemeProvider';
 
 export default function OnboardingStep1() {
@@ -14,10 +14,7 @@ export default function OnboardingStep1() {
       <StepIndicator total={6} current={1} />
 
       <View style={{ flex: 1, justifyContent: 'center', gap: theme.spacing.xl }}>
-        <MotiView
-          from={{ opacity: 0, translateY: 12 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: 'timing', duration: 500 }}
+        <FadeRise
           style={{
             alignSelf: 'center',
             width: 96,
@@ -29,7 +26,7 @@ export default function OnboardingStep1() {
           }}
         >
           <Icon name="sparkles-outline" size={44} color="accent" />
-        </MotiView>
+        </FadeRise>
 
         <View style={{ gap: theme.spacing.md, alignItems: 'center' }}>
           <Text variant="h1" style={{ textAlign: 'center' }}>

@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { MotiView } from 'moti';
 import { Button, Card, Icon, Screen, Text } from '@/components';
 import { StepIndicator } from '@/features/onboarding/StepIndicator';
+import { PopIn } from '@/features/onboarding/AnimatedMount';
 import { vehicleCatalog, usageCatalog, planCatalog } from '@/features/onboarding/catalog';
 import { useUserStore, type UserProfile } from '@/stores/useUserStore';
 import { submitProfile, type SubmitProfileResponse } from '@/services/mocks/profileApi';
@@ -47,10 +47,7 @@ export default function OnboardingStep6() {
     return (
       <Screen>
         <View style={{ flex: 1, justifyContent: 'center', gap: theme.spacing.xl }}>
-          <MotiView
-            from={{ opacity: 0, scale: 0.6 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: 'spring', damping: 12 }}
+          <PopIn
             style={{
               alignSelf: 'center',
               width: 112,
@@ -62,7 +59,7 @@ export default function OnboardingStep6() {
             }}
           >
             <Icon name="checkmark-circle" size={64} color="accent" />
-          </MotiView>
+          </PopIn>
 
           <View style={{ gap: theme.spacing.md, alignItems: 'center' }}>
             <Text variant="h1" style={{ textAlign: 'center' }}>
