@@ -75,22 +75,23 @@ Plano operacional dividido em milestones incrementais. Cada milestone tem **bran
 **Objetivo:** Estrutura de roteamento Expo Router com fluxos de autenticação (mock) e tabs principais.
 
 ### Entregas
-- [ ] `app/_layout.tsx` — root layout com fonts + ThemeProvider + StatusBar dark
-- [ ] `app/(auth)/_layout.tsx` — stack auth
-  - [ ] `app/(auth)/login.tsx`
-  - [ ] `app/(auth)/signup.tsx`
-  - [ ] `app/(auth)/forgot-password.tsx`
-- [ ] `app/(tabs)/_layout.tsx` — bottom tabs (Home / Mapa / Carteira / Perfil)
-  - [ ] `app/(tabs)/index.tsx` (Home placeholder)
-  - [ ] `app/(tabs)/map.tsx` (placeholder)
-  - [ ] `app/(tabs)/wallet.tsx` (placeholder)
-  - [ ] `app/(tabs)/profile.tsx` (placeholder)
-- [ ] `app/+not-found.tsx`
-- [ ] `src/stores/useAuthStore.ts` — token, user, login/logout (mock async)
-- [ ] Guarda de rota: redireciona não autenticado para `/login`
-- [ ] `expo-secure-store` para persistir token mock
-- [ ] Animações de transição entre stacks (Reanimated)
+- [x] `app/_layout.tsx` — root layout com fonts + ThemeProvider + StatusBar dark
+- [x] `app/(auth)/_layout.tsx` — stack auth
+  - [x] `app/(auth)/login.tsx`
+  - [x] `app/(auth)/signup.tsx`
+  - [x] `app/(auth)/forgot-password.tsx`
+- [x] `app/(tabs)/_layout.tsx` — bottom tabs (Home / Mapa / Carteira / Perfil)
+  - [x] `app/(tabs)/index.tsx` (Home placeholder)
+  - [x] `app/(tabs)/map.tsx` (placeholder)
+  - [x] `app/(tabs)/wallet.tsx` (placeholder)
+  - [x] `app/(tabs)/profile.tsx` (placeholder + logout)
+- [x] `app/+not-found.tsx`
+- [x] `src/stores/useAuthStore.ts` — token, user, login/logout (mock async)
+- [x] Guarda de rota: redireciona não autenticado para `/login`
+- [x] `expo-secure-store` para persistir token mock (`src/services/secureStorage.ts`)
+- [x] Animações de transição entre stacks (fade no root stack, slide no auth stack)
 
+**Status:** ✅ Concluído — commit `5b50674` na branch `feat/m2-navigation-auth`
 **Commit final:** `feat(navigation): expo router com auth stack e tabs base`
 
 ---
