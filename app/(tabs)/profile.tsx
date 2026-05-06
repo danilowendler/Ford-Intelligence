@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, View } from 'react-native';
+import { Alert, Platform, View } from 'react-native';
 import { Badge, Button, Card, Screen, Text } from '@/components';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -12,21 +12,26 @@ export default function ProfileScreen() {
   const plan = usePlanStore((s) => s.plan);
   const [signingOut, setSigningOut] = useState(false);
 
-  const handleLogout = async () => {
+  const performLogout = async () => {
+    setSigningOut(true);
+    try {
+      await logout();
+    } finally {
+      setSigningOut(false);
+    }
+  };
+
+  const handleLogout = () => {
+    if (Platform.OS === 'web') {
+      const ok =
+        typeof window !== 'undefined' &&
+        window.confirm('Deseja realmente encerrar a sessão?');
+      if (ok) performLogout();
+      return;
+    }
     Alert.alert('Sair da conta', 'Deseja realmente encerrar a sessão?', [
       { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Sair',
-        style: 'destructive',
-        onPress: async () => {
-          setSigningOut(true);
-          try {
-            await logout();
-          } finally {
-            setSigningOut(false);
-          }
-        },
-      },
+      { text: 'Sair', style: 'destructive', onPress: performLogout },
     ]);
   };
 

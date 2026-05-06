@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -50,15 +50,23 @@ export default function RootLayout() {
 
   const status = useAuthStore((s) => s.status);
   const hydrate = useAuthStore((s) => s.hydrate);
+  const [hydrated, setHydrated] = useState(false);
+  const hydrateOnce = useRef(false);
 
   useEffect(() => {
-    if (status === 'idle') {
+    if (!hydrateOnce.current && status === 'idle') {
+      hydrateOnce.current = true;
       hydrate();
     }
   }, [status, hydrate]);
 
-  const sessionReady = status === 'authenticated' || status === 'unauthenticated';
-  const ready = (fontsLoaded || fontError) && sessionReady;
+  useEffect(() => {
+    if (!hydrated && (status === 'authenticated' || status === 'unauthenticated')) {
+      setHydrated(true);
+    }
+  }, [status, hydrated]);
+
+  const ready = (fontsLoaded || fontError) && hydrated;
 
   useEffect(() => {
     if (ready) {

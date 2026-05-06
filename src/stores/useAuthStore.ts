@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import * as SecureStore from 'expo-secure-store';
+import { secureStorage } from '@/services/secureStorage';
 import {
   login as loginApi,
   signup as signupApi,
@@ -31,13 +31,13 @@ type AuthState = {
 };
 
 async function persistSession(token: string, user: AuthUser) {
-  await SecureStore.setItemAsync(TOKEN_KEY, token);
-  await SecureStore.setItemAsync(USER_KEY, JSON.stringify(user));
+  await secureStorage.setItem(TOKEN_KEY, token);
+  await secureStorage.setItem(USER_KEY, JSON.stringify(user));
 }
 
 async function clearSession() {
-  await SecureStore.deleteItemAsync(TOKEN_KEY);
-  await SecureStore.deleteItemAsync(USER_KEY);
+  await secureStorage.removeItem(TOKEN_KEY);
+  await secureStorage.removeItem(USER_KEY);
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -50,8 +50,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ status: 'hydrating' });
     try {
       const [token, rawUser] = await Promise.all([
-        SecureStore.getItemAsync(TOKEN_KEY),
-        SecureStore.getItemAsync(USER_KEY),
+        secureStorage.getItem(TOKEN_KEY),
+        secureStorage.getItem(USER_KEY),
       ]);
       if (token && rawUser) {
         set({
