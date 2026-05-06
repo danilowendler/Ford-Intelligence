@@ -123,13 +123,20 @@ export default function OnboardingStep6() {
         </Text>
       ) : null}
 
-      <View style={{ marginTop: theme.spacing.lg }}>
+      <View style={{ marginTop: theme.spacing.lg, gap: theme.spacing.sm }}>
         <Button
           label="Concluir"
           fullWidth
           loading={submitting}
           disabled={!draftIsComplete}
           onPress={handleConfirm}
+        />
+        <Button
+          label="Voltar"
+          variant="ghost"
+          fullWidth
+          disabled={submitting}
+          onPress={() => router.back()}
         />
       </View>
     </Screen>

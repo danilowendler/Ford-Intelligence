@@ -1,4 +1,5 @@
-import { View } from 'react-native';
+import { useEffect } from 'react';
+import { Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,7 +11,6 @@ import { useUserStore } from '@/stores/useUserStore';
 import { usePlanStore } from '@/stores/usePlanStore';
 import { useTheme } from '@/theme/ThemeProvider';
 import { planAccents, planIds, type PlanId } from '@/theme/plans';
-import { Pressable } from 'react-native';
 
 const schema = z.object({
   plan: z.enum(planIds as readonly [PlanId, ...PlanId[]]),
@@ -28,6 +28,7 @@ export default function OnboardingStep5() {
   const {
     control,
     handleSubmit,
+    trigger,
     formState: { isValid },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -36,6 +37,10 @@ export default function OnboardingStep5() {
       plan: draft.plan,
     },
   });
+
+  useEffect(() => {
+    trigger();
+  }, [trigger]);
 
   const onSubmit = handleSubmit((values) => {
     updateDraft({ plan: values.plan });
@@ -138,8 +143,9 @@ export default function OnboardingStep5() {
         )}
       />
 
-      <View style={{ marginTop: theme.spacing.lg }}>
+      <View style={{ marginTop: theme.spacing.lg, gap: theme.spacing.sm }}>
         <Button label="Avançar" fullWidth disabled={!isValid} onPress={onSubmit} />
+        <Button label="Voltar" variant="ghost" fullWidth onPress={() => router.back()} />
       </View>
     </Screen>
   );

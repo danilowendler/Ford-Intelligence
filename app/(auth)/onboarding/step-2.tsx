@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
@@ -25,6 +26,7 @@ export default function OnboardingStep2() {
   const {
     control,
     handleSubmit,
+    trigger,
     formState: { isValid },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -33,6 +35,10 @@ export default function OnboardingStep2() {
       vehicleModel: draft.vehicleModel,
     },
   });
+
+  useEffect(() => {
+    trigger();
+  }, [trigger]);
 
   const onSubmit = handleSubmit((values) => {
     updateDraft({ vehicleModel: values.vehicleModel });
@@ -72,8 +78,9 @@ export default function OnboardingStep2() {
         )}
       />
 
-      <View style={{ marginTop: theme.spacing.lg }}>
+      <View style={{ marginTop: theme.spacing.lg, gap: theme.spacing.sm }}>
         <Button label="Avançar" fullWidth disabled={!isValid} onPress={onSubmit} />
+        <Button label="Voltar" variant="ghost" fullWidth onPress={() => router.back()} />
       </View>
     </Screen>
   );
