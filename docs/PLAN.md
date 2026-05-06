@@ -102,20 +102,25 @@ Plano operacional dividido em milestones incrementais. Cada milestone tem **bran
 **Objetivo:** Fluxo multi-step de onboarding capturando perfil de uso para alimentar o motor de IA (mock).
 
 ### Entregas
-- [ ] `app/(auth)/onboarding/_layout.tsx` — stack do wizard
-- [ ] Passo 1: Boas-vindas + branding
-- [ ] Passo 2: Modelo do veículo (seleção entre mocks: Ranger, Maverick, Territory, Mustang)
-- [ ] Passo 3: Estilo de uso (Urbano / Rural / Misto / Performance)
-- [ ] Passo 4: Quilometragem média mensal
-- [ ] Passo 5: Seleção de plano SaaS (Agro / Urban / Premium) com comparativo
-- [ ] Passo 6: Confirmação + animação de conclusão
-- [ ] Indicador de progresso (steps)
-- [ ] Validação por step com `zod` + `react-hook-form`
-- [ ] `src/stores/useUserStore.ts` — perfil completo persistido
-- [ ] `src/services/mocks/profileApi.ts` — `submitProfile()` retorna risco mockado
-- [ ] Onboarding executa apenas no primeiro acesso (flag em AsyncStorage)
+- [x] `app/(auth)/onboarding/_layout.tsx` — stack do wizard
+- [x] Passo 1: Boas-vindas + branding
+- [x] Passo 2: Modelo do veículo (seleção entre mocks: Ranger, Maverick, Territory, Mustang)
+- [x] Passo 3: Estilo de uso (Urbano / Rural / Misto / Performance)
+- [x] Passo 4: Quilometragem média mensal
+- [x] Passo 5: Seleção de plano SaaS (Agro / Urban / Premium) com comparativo
+- [x] Passo 6: Confirmação + animação de conclusão
+- [x] Indicador de progresso (steps)
+- [x] Validação por step com `zod` + `react-hook-form` (+ `trigger()` no mount para refletir defaultValues do draft)
+- [x] `src/stores/useUserStore.ts` — perfil completo persistido em AsyncStorage
+- [x] `src/services/mocks/profileApi.ts` — `submitProfile()` retorna risco mockado
+- [x] Onboarding executa apenas no primeiro acesso (flag em AsyncStorage)
+- [x] Botão Voltar (ghost) nos steps 2-6 já que `gestureEnabled: false`
+- [x] Animações de mount via `react-native-reanimated` (substitui `moti` que quebrava o bundler web por incompatibilidade de `tslib`)
 
-**Commit final:** `feat(onboarding): wizard multi-step com perfilamento e seleção de plano`
+**Status:** ✅ Concluído — branch `feat/m3-onboarding`
+**Commit final:** `feat(onboarding): implementa wizard de 6 steps e perfilamento do usuario`
+
+> **Débito conhecido (resolver na M9):** o perfil hoje é por dispositivo. Quando a M9 introduzir o role do analista, migrar `useUserStore` para indexar perfil/flag por `userId`, junto com o role-gate.
 
 ---
 
