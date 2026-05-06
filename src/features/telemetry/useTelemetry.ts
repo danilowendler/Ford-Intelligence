@@ -7,12 +7,15 @@ export function useTelemetry(): TelemetryReading | null {
   const setReading = useVehicleStore((s) => s.setReading);
 
   useEffect(() => {
-    const handler = (next: TelemetryReading) => setReading(next);
-    telemetrySimulator.on('reading', handler);
+    let mounted = true;
+    const unsubscribe = telemetrySimulator.on((next: TelemetryReading) => {
+      if (mounted) setReading(next);
+    });
     telemetrySimulator.start();
 
     return () => {
-      telemetrySimulator.off('reading', handler);
+      mounted = false;
+      unsubscribe();
     };
   }, [setReading]);
 

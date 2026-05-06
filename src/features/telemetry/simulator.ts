@@ -1,5 +1,3 @@
-import { EventEmitter } from 'events';
-
 export type TirePressures = {
   frontLeft: number;
   frontRight: number;
@@ -16,9 +14,7 @@ export type TelemetryReading = {
   batteryVolts: number;
 };
 
-export type TelemetryEventMap = {
-  reading: [TelemetryReading];
-};
+export type TelemetryListener = (reading: TelemetryReading) => void;
 
 const TICK_INTERVAL_MS = 2000;
 
@@ -43,13 +39,26 @@ function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
-class TelemetrySimulator extends EventEmitter<TelemetryEventMap> {
+class TelemetrySimulator {
   private timer: ReturnType<typeof setInterval> | null = null;
+  private listeners = new Set<TelemetryListener>();
   private current: TelemetryReading;
 
   constructor() {
-    super();
     this.current = this.seed();
+  }
+
+  on(listener: TelemetryListener): () => void {
+    this.listeners.add(listener);
+    return () => this.off(listener);
+  }
+
+  off(listener: TelemetryListener): void {
+    this.listeners.delete(listener);
+  }
+
+  private emit(reading: TelemetryReading): void {
+    this.listeners.forEach((l) => l(reading));
   }
 
   private seed(): TelemetryReading {
@@ -80,11 +89,14 @@ class TelemetrySimulator extends EventEmitter<TelemetryEventMap> {
   }
 
   start(): void {
-    if (this.timer) return;
-    this.emit('reading', this.current);
+    if (this.timer) {
+      this.emit(this.current);
+      return;
+    }
+    this.emit(this.current);
     this.timer = setInterval(() => {
       this.current = this.nextReading(this.current);
-      this.emit('reading', this.current);
+      this.emit(this.current);
     }, TICK_INTERVAL_MS);
   }
 
@@ -97,7 +109,7 @@ class TelemetrySimulator extends EventEmitter<TelemetryEventMap> {
 
   reset(): void {
     this.current = this.seed();
-    this.emit('reading', this.current);
+    this.emit(this.current);
   }
 
   getCurrent(): TelemetryReading {
