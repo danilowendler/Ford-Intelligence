@@ -140,7 +140,8 @@ export function Scene({
 }: SceneProps) {
   const orbitRef = useRef<OrbitState>({ ...DEFAULT_ORBIT });
   const targetOrbitRef = useRef<OrbitState | null>(null);
-  const gestureStartRef = useRef<OrbitState>({ ...DEFAULT_ORBIT });
+  const panStartRef = useRef<OrbitState>({ ...DEFAULT_ORBIT });
+  const pinchStartRef = useRef<OrbitState>({ ...DEFAULT_ORBIT });
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const hotspotMeshesRef = useRef<THREE.Mesh[]>([]);
   const sizeRef = useRef({ w: 0, h: 0 });
@@ -173,28 +174,32 @@ export function Scene({
     sizeRef.current = { w: width, h: height };
   }, []);
 
+  const cancelPresetAnimation = useCallback(() => {
+    targetOrbitRef.current = null;
+    setAnimating(false);
+  }, []);
+
   const panGesture = useMemo(
     () =>
       Gesture.Pan()
         .runOnJS(true)
         .onStart(() => {
-          gestureStartRef.current = { ...orbitRef.current };
-          targetOrbitRef.current = null;
+          panStartRef.current = { ...orbitRef.current };
+          cancelPresetAnimation();
           setInteracting(true);
         })
         .onUpdate((e) => {
-          const start = gestureStartRef.current;
-          const next = clampOrbit({
+          const start = panStartRef.current;
+          orbitRef.current = clampOrbit({
             azimuth: start.azimuth - e.translationX * PAN_SENSITIVITY,
             polar: start.polar - e.translationY * PAN_SENSITIVITY,
-            distance: start.distance,
+            distance: orbitRef.current.distance,
           });
-          orbitRef.current = next;
         })
-        .onEnd(() => {
+        .onFinalize(() => {
           setInteracting(false);
         }),
-    [],
+    [cancelPresetAnimation],
   );
 
   const pinchGesture = useMemo(
@@ -202,12 +207,12 @@ export function Scene({
       Gesture.Pinch()
         .runOnJS(true)
         .onStart(() => {
-          gestureStartRef.current = { ...orbitRef.current };
-          targetOrbitRef.current = null;
+          pinchStartRef.current = { ...orbitRef.current };
+          cancelPresetAnimation();
           setInteracting(true);
         })
         .onUpdate((e) => {
-          const start = gestureStartRef.current;
+          const start = pinchStartRef.current;
           const scale = Math.max(0.4, Math.min(2.5, e.scale));
           const nextDistance = start.distance / (scale * PINCH_SENSITIVITY);
           orbitRef.current = clampOrbit({
@@ -216,10 +221,10 @@ export function Scene({
             distance: nextDistance,
           });
         })
-        .onEnd(() => {
+        .onFinalize(() => {
           setInteracting(false);
         }),
-    [],
+    [cancelPresetAnimation],
   );
 
   const tapGesture = useMemo(

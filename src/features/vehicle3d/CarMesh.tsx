@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 
 const FORD_BLUE = '#1F6FEB';
@@ -72,6 +72,15 @@ export function CarMesh() {
       }),
     [],
   );
+
+  useEffect(() => {
+    return () => {
+      bodyMaterial.dispose();
+      accentMaterial.dispose();
+      glassMaterial.dispose();
+      headlightMaterial.dispose();
+    };
+  }, [bodyMaterial, accentMaterial, glassMaterial, headlightMaterial]);
 
   return (
     <group>
