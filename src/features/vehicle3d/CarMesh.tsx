@@ -2,10 +2,10 @@ import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 
 const FORD_BLUE = '#1F6FEB';
-const BODY_DARK = '#0F1623';
-const CABIN_GLASS = '#0A1422';
+const BODY_DARK = '#2A3447';
+const CABIN_GLASS = '#152033';
 const TIRE_COLOR = '#0A0E14';
-const RIM_COLOR = '#3B4252';
+const RIM_COLOR = '#5A6478';
 const HEADLIGHT_COLOR = '#FFE9A8';
 
 type WheelProps = {
@@ -32,8 +32,8 @@ export function CarMesh() {
     () =>
       new THREE.MeshStandardMaterial({
         color: BODY_DARK,
-        metalness: 0.55,
-        roughness: 0.32,
+        metalness: 0.25,
+        roughness: 0.55,
       }),
     [],
   );
@@ -42,10 +42,10 @@ export function CarMesh() {
     () =>
       new THREE.MeshStandardMaterial({
         color: FORD_BLUE,
-        metalness: 0.5,
-        roughness: 0.45,
+        metalness: 0.3,
+        roughness: 0.5,
         emissive: '#0A2050',
-        emissiveIntensity: 0.4,
+        emissiveIntensity: 0.35,
       }),
     [],
   );
@@ -54,8 +54,8 @@ export function CarMesh() {
     () =>
       new THREE.MeshStandardMaterial({
         color: CABIN_GLASS,
-        metalness: 0.9,
-        roughness: 0.15,
+        metalness: 0.4,
+        roughness: 0.25,
         transparent: true,
         opacity: 0.85,
       }),

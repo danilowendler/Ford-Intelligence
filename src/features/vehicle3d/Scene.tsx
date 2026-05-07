@@ -93,14 +93,16 @@ function SceneContent({
 }: SceneContentProps) {
   return (
     <>
-      <ambientLight intensity={0.45} />
+      <ambientLight intensity={0.7} />
+      <hemisphereLight args={['#6FA3FF', '#0A0E14', 0.5]} />
       <directionalLight
         position={[6, 8, 4]}
-        intensity={1.1}
+        intensity={1.0}
         color="#FFFFFF"
         castShadow
       />
-      <directionalLight position={[-5, 4, -3]} intensity={0.55} color="#1F6FEB" />
+      <directionalLight position={[-5, 4, -3]} intensity={0.75} color="#1F6FEB" />
+      <directionalLight position={[-3, 2, 5]} intensity={0.45} color="#FFFFFF" />
       <pointLight position={[0, 4, 6]} intensity={0.4} color="#6FA3FF" />
 
       <CarMesh />
