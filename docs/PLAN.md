@@ -155,18 +155,20 @@ Plano operacional dividido em milestones incrementais. Cada milestone tem **bran
 **Objetivo:** Cena 3D interativa do veículo com hotspots de alerta sincronizados com a telemetria.
 
 ### Entregas
-- [ ] `app/vehicle/[id].tsx` — rota detalhe do veículo
-- [ ] `src/features/vehicle3d/Scene.tsx` — `<Canvas>` com `@react-three/fiber/native`
-- [ ] Carregar modelo `.glb` placeholder em `assets/models/` (carro low-poly genérico)
-- [ ] Iluminação: ambient + directional + rim light azul Ford
-- [ ] Câmera orbital com gestos (toque para girar, pinch para zoom)
-- [ ] `src/features/vehicle3d/Hotspot.tsx` — esfera pulsante 3D em pontos críticos (pneus, motor, bateria)
-- [ ] Hotspots reagem aos alertas do `useAlertsStore` (cor warn/critical)
-- [ ] Toque em hotspot abre `BottomSheet` com detalhes do alerta
-- [ ] Botões: "Vista frontal", "Vista lateral", "Vista superior"
-- [ ] Loading skeleton enquanto modelo carrega
-- [ ] Otimização: `frameloop="demand"` quando estático
+- [x] `app/vehicle/[id].tsx` — rota detalhe do veículo
+- [x] `src/features/vehicle3d/Scene.tsx` — `<Canvas>` com `@react-three/fiber/native`
+- [x] Modelo placeholder em `src/features/vehicle3d/CarMesh.tsx` montado com primitivas (boxes + cilindros) — sem `.glb` para manter o repo leve nesta etapa
+- [x] Iluminação: ambient + directional + rim light azul Ford (`#1F6FEB`) + point light auxiliar
+- [x] Câmera orbital com gestos via `react-native-gesture-handler` (Pan para girar, Pinch para zoom)
+- [x] `src/features/vehicle3d/Hotspot.tsx` — esfera pulsante 3D nos 4 pneus, motor e bateria
+- [x] Hotspots derivados da telemetria (`useVehicleStore`) com cor warn/critical sincronizada à mesma fonte do `useAlertsStore`
+- [x] Toque em hotspot via raycast manual → `AlertSheet` (Modal RN + Reanimated `SlideInDown` + `GlassPanel`)
+- [x] Botões: "Frontal", "Lateral", "Superior" com lerp animado entre presets
+- [x] Loading skeleton enquanto cena monta
+- [x] Otimização: `frameloop="demand"` no estado ocioso; `"always"` apenas durante gestos, animação de preset, ou enquanto algum hotspot estiver pulsando
+- [x] CTA "Ver em 3D" no header da seção de telemetria da Home
 
+**Status:** ✅ Concluído — branch `feat/m5-vehicle-3d`
 **Commit final:** `feat(vehicle3d): cena 3D interativa com hotspots de alerta`
 
 ---
