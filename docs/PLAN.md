@@ -130,20 +130,21 @@ Plano operacional dividido em milestones incrementais. Cada milestone tem **bran
 **Objetivo:** Tela principal com dados em tempo real simulados (OBD2) e sistema de alertas preditivos.
 
 ### Entregas
-- [ ] `src/features/telemetry/simulator.ts` — `EventEmitter` emitindo a cada 2s: hodômetro, pressão pneus (4), temperatura motor, nível combustível, bateria
-- [ ] `src/features/telemetry/useTelemetry.ts` — hook que assina o emitter
-- [ ] `src/stores/useVehicleStore.ts` — estado do veículo + leituras atuais
-- [ ] `src/services/mocks/alertsApi.ts` — gera alertas baseados em thresholds (ex: km > 9000 → "Revisão antecipada")
-- [ ] `src/stores/useAlertsStore.ts` — fila de alertas
-- [ ] Tela Home (`app/(tabs)/index.tsx`):
-  - [ ] Header com saudação + plano atual (badge)
-  - [ ] Card destaque: próxima manutenção prevista (IA mock)
-  - [ ] Carrossel de KPIs em GlassPanels: km, pneus, temp, bateria
-  - [ ] Lista de alertas ativos (com severidade)
-  - [ ] CTA "Agendar serviço" (navega para M6)
-- [ ] Animações reativas (Moti) em mudança de leituras
-- [ ] Pull-to-refresh resincroniza simulador
+- [x] `src/features/telemetry/simulator.ts` — `EventEmitter` emitindo a cada 2s: hodômetro, pressão pneus (4), temperatura motor, nível combustível, bateria
+- [x] `src/features/telemetry/useTelemetry.ts` — hook que assina o emitter
+- [x] `src/stores/useVehicleStore.ts` — estado do veículo + leituras atuais
+- [x] `src/services/mocks/alertsApi.ts` — gera alertas baseados em thresholds (ex: km > 9000 → "Revisão antecipada")
+- [x] `src/stores/useAlertsStore.ts` — fila de alertas
+- [x] Tela Home (`app/(tabs)/index.tsx`):
+  - [x] Header com saudação + plano atual (badge)
+  - [x] Card destaque: próxima manutenção prevista (IA mock)
+  - [x] Carrossel de KPIs em GlassPanels: km, pneus, temp, bateria
+  - [x] Lista de alertas ativos (com severidade)
+  - [x] CTA "Agendar serviço" (navega para M6)
+- [x] Animações reativas em mudança de leituras (`react-native-reanimated`; `moti` evitado pelo mesmo motivo do M3)
+- [x] Pull-to-refresh resincroniza simulador
 
+**Status:** ✅ Concluído — branch `feat/m4-telemetry-home`
 **Commit final:** `feat(telemetry): home com simulação IoT em tempo real e alertas preditivos`
 
 ---
