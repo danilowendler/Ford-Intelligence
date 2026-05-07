@@ -171,6 +171,14 @@ Plano operacional dividido em milestones incrementais. Cada milestone tem **bran
 **Status:** ✅ Concluído — branch `feat/m5-vehicle-3d`
 **Commit final:** `feat(vehicle3d): cena 3D interativa com hotspots de alerta`
 
+**Revisão pós-implementação (correções aplicadas):**
+- `frameloop` agora destrava corretamente após gestos cancelarem uma animação de preset (zera `targetOrbitRef` + `setAnimating(false)` no `onStart` do Pan/Pinch)
+- Gestos usam `.onFinalize()` em vez de `.onEnd()` para garantir reset de `interacting` mesmo em cancelamentos
+- Pan e Pinch passaram a usar refs separadas (`panStartRef` / `pinchStartRef`) — eliminado o salto visual em gestos simultâneos
+- Materiais customizados em `CarMesh.tsx` agora chamam `.dispose()` no unmount — sem leak de GPU ao voltar para a Home
+- `AlertSheet` mantém o Modal montado por 280ms após o fechamento para que `SlideOutDown` + `FadeOut` toquem por completo (antes o Modal cortava a árvore antes da animação de saída)
+- Polimento visual: corpo do veículo unificado na paleta Ford blue do capô, iluminação com `hemisphereLight` + fill light suave para legibilidade
+
 ---
 
 ## M6 — Mapa de Concessionárias & Agendamento
