@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
   View,
 } from 'react-native';
+import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Badge, Button, Card, GlassPanel, Icon, Text } from '@/components';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -231,9 +233,32 @@ export default function HomeScreen() {
         <View style={{ gap: theme.spacing.sm }}>
           <View style={styles.sectionHeader}>
             <Text variant="h3">Telemetria em tempo real</Text>
-            <Text variant="caption" color="muted">
-              Atualiza a cada 2s
-            </Text>
+            <Pressable
+              onPress={() =>
+                router.push({
+                  pathname: '/vehicle/[id]',
+                  params: { id: profile?.vehicleModel ?? 'main' },
+                })
+              }
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Abrir veículo em 3D"
+              style={({ pressed }) => [
+                {
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 4,
+                  paddingVertical: 4,
+                  opacity: pressed ? 0.7 : 1,
+                },
+              ]}
+            >
+              <Icon name="cube-outline" size={14} color="accent" />
+              <Text variant="caption" color="accent" style={{ fontWeight: '600' }}>
+                Ver em 3D
+              </Text>
+              <Icon name="chevron-forward" size={14} color="accent" />
+            </Pressable>
           </View>
           {kpis.length === 0 ? (
             <GlassPanel padding="lg">
