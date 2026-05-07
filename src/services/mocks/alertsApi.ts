@@ -2,7 +2,13 @@ import type { TelemetryReading } from '@/features/telemetry/simulator';
 
 export type AlertSeverity = 'warn' | 'critical';
 
-export type AlertCategory = 'maintenance' | 'tire' | 'engine' | 'fuel' | 'battery';
+export type AlertCategory =
+  | 'maintenance'
+  | 'tire-low'
+  | 'tire-high'
+  | 'engine'
+  | 'fuel'
+  | 'battery';
 
 export type Alert = {
   id: string;
@@ -20,6 +26,10 @@ const ENGINE_TEMP_WARN = 100;
 const ENGINE_TEMP_CRITICAL = 108;
 const FUEL_LOW_PCT = 15;
 const BATTERY_LOW_VOLTS = 11.8;
+
+export function alertKey(category: AlertCategory, severity: AlertSeverity): string {
+  return `${category}:${severity}`;
+}
 
 function delay<T>(value: T, ms = 350): Promise<T> {
   return new Promise((resolve) => setTimeout(() => resolve(value), ms));
@@ -51,7 +61,7 @@ export function evaluateAlerts(reading: TelemetryReading): Alert[] {
 
   if (reading.odometerKm >= REVISION_THRESHOLD_KM) {
     out.push({
-      id: 'maintenance-due',
+      id: alertKey('maintenance', 'warn'),
       category: 'maintenance',
       severity: 'warn',
       title: 'Revisão programada próxima',
@@ -63,8 +73,8 @@ export function evaluateAlerts(reading: TelemetryReading): Alert[] {
   const minTire = lowestTire(reading);
   if (minTire.psi < TIRE_LOW_PSI) {
     out.push({
-      id: `tire-low-${minTire.name}`,
-      category: 'tire',
+      id: alertKey('tire-low', 'warn'),
+      category: 'tire-low',
       severity: 'warn',
       title: 'Pressão baixa nos pneus',
       description: `Pneu ${minTire.name} em ${minTire.psi.toFixed(1)} PSI. Calibre na próxima parada.`,
@@ -75,8 +85,8 @@ export function evaluateAlerts(reading: TelemetryReading): Alert[] {
   const maxTire = highestTire(reading);
   if (maxTire.psi > TIRE_HIGH_PSI) {
     out.push({
-      id: `tire-high-${maxTire.name}`,
-      category: 'tire',
+      id: alertKey('tire-high', 'warn'),
+      category: 'tire-high',
       severity: 'warn',
       title: 'Pressão acima do recomendado',
       description: `Pneu ${maxTire.name} em ${maxTire.psi.toFixed(1)} PSI. Verifique calibragem.`,
@@ -86,7 +96,7 @@ export function evaluateAlerts(reading: TelemetryReading): Alert[] {
 
   if (reading.engineTempC >= ENGINE_TEMP_CRITICAL) {
     out.push({
-      id: 'engine-overheat',
+      id: alertKey('engine', 'critical'),
       category: 'engine',
       severity: 'critical',
       title: 'Superaquecimento do motor',
@@ -95,7 +105,7 @@ export function evaluateAlerts(reading: TelemetryReading): Alert[] {
     });
   } else if (reading.engineTempC >= ENGINE_TEMP_WARN) {
     out.push({
-      id: 'engine-warm',
+      id: alertKey('engine', 'warn'),
       category: 'engine',
       severity: 'warn',
       title: 'Motor aquecido',
@@ -106,7 +116,7 @@ export function evaluateAlerts(reading: TelemetryReading): Alert[] {
 
   if (reading.fuelLevelPct < FUEL_LOW_PCT) {
     out.push({
-      id: 'fuel-low',
+      id: alertKey('fuel', 'warn'),
       category: 'fuel',
       severity: 'warn',
       title: 'Combustível baixo',
@@ -117,7 +127,7 @@ export function evaluateAlerts(reading: TelemetryReading): Alert[] {
 
   if (reading.batteryVolts < BATTERY_LOW_VOLTS) {
     out.push({
-      id: 'battery-low',
+      id: alertKey('battery', 'critical'),
       category: 'battery',
       severity: 'critical',
       title: 'Tensão de bateria baixa',

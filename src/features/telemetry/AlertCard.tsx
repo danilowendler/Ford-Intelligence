@@ -6,7 +6,8 @@ import type { Alert, AlertCategory, AlertSeverity } from '@/services/mocks/alert
 
 const ICON_BY_CATEGORY: Record<AlertCategory, IconName> = {
   maintenance: 'construct-outline',
-  tire: 'ellipse-outline',
+  'tire-low': 'ellipse-outline',
+  'tire-high': 'ellipse-outline',
   engine: 'thermometer-outline',
   fuel: 'water-outline',
   battery: 'battery-half-outline',

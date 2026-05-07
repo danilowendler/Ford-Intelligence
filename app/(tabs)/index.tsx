@@ -13,6 +13,7 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { useUserStore, type VehicleModel } from '@/stores/useUserStore';
 import { useVehicleStore } from '@/stores/useVehicleStore';
 import { useAlertsStore } from '@/stores/useAlertsStore';
+import type { TelemetryReading } from '@/features/telemetry/simulator';
 import { restartTelemetry, useTelemetry } from '@/features/telemetry/useTelemetry';
 import { TelemetryKpi, type TelemetryKpiTone } from '@/features/telemetry/TelemetryKpi';
 import { AlertCard } from '@/features/telemetry/AlertCard';
@@ -29,7 +30,7 @@ const VEHICLE_LABELS: Record<VehicleModel, string> = {
   mustang: 'Ford Mustang',
 };
 
-function lowestTirePsi(reading: ReturnType<typeof useVehicleStore.getState>['reading']) {
+function lowestTirePsi(reading: TelemetryReading | null): number | null {
   if (!reading) return null;
   const { tirePressurePsi } = reading;
   return Math.min(
@@ -47,7 +48,7 @@ export default function HomeScreen() {
 
   const reading = useTelemetry();
   const alerts = useAlertsStore((s) => s.alerts);
-  const setAlerts = useAlertsStore((s) => s.setAlerts);
+  const syncAlerts = useAlertsStore((s) => s.syncFromEvaluation);
   const dismiss = useAlertsStore((s) => s.dismiss);
   const clearDismissed = useAlertsStore((s) => s.clearDismissed);
 
@@ -56,8 +57,8 @@ export default function HomeScreen() {
 
   useEffect(() => {
     if (!reading) return;
-    setAlerts(evaluateAlerts(reading));
-  }, [reading, setAlerts]);
+    syncAlerts(evaluateAlerts(reading));
+  }, [reading, syncAlerts]);
 
   useEffect(() => {
     if (!reading || prediction) return;

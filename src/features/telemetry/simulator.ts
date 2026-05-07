@@ -48,13 +48,14 @@ class TelemetrySimulator {
     this.current = this.seed();
   }
 
-  on(listener: TelemetryListener): () => void {
+  subscribe(listener: TelemetryListener): () => void {
     this.listeners.add(listener);
-    return () => this.off(listener);
-  }
-
-  off(listener: TelemetryListener): void {
-    this.listeners.delete(listener);
+    if (!this.timer) this.startTicking();
+    listener(this.current);
+    return () => {
+      this.listeners.delete(listener);
+      if (this.listeners.size === 0) this.stopTicking();
+    };
   }
 
   private emit(reading: TelemetryReading): void {
@@ -88,19 +89,15 @@ class TelemetrySimulator {
     };
   }
 
-  start(): void {
-    if (this.timer) {
-      this.emit(this.current);
-      return;
-    }
-    this.emit(this.current);
+  private startTicking(): void {
+    if (this.timer) return;
     this.timer = setInterval(() => {
       this.current = this.nextReading(this.current);
       this.emit(this.current);
     }, TICK_INTERVAL_MS);
   }
 
-  stop(): void {
+  private stopTicking(): void {
     if (this.timer) {
       clearInterval(this.timer);
       this.timer = null;
