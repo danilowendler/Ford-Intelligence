@@ -2,7 +2,8 @@ import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 
 const FORD_BLUE = '#1F6FEB';
-const BODY_DARK = '#2A3447';
+const BODY_BLUE = '#1F6FEB';
+const BODY_EMISSIVE = '#0A2050';
 const CABIN_GLASS = '#152033';
 const TIRE_COLOR = '#0A0E14';
 const RIM_COLOR = '#5A6478';
@@ -31,9 +32,11 @@ export function CarMesh() {
   const bodyMaterial = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
-        color: BODY_DARK,
-        metalness: 0.25,
-        roughness: 0.55,
+        color: BODY_BLUE,
+        metalness: 0.3,
+        roughness: 0.5,
+        emissive: BODY_EMISSIVE,
+        emissiveIntensity: 0.3,
       }),
     [],
   );
@@ -43,9 +46,9 @@ export function CarMesh() {
       new THREE.MeshStandardMaterial({
         color: FORD_BLUE,
         metalness: 0.3,
-        roughness: 0.5,
-        emissive: '#0A2050',
-        emissiveIntensity: 0.35,
+        roughness: 0.45,
+        emissive: BODY_EMISSIVE,
+        emissiveIntensity: 0.4,
       }),
     [],
   );
