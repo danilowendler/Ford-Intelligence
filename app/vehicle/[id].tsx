@@ -91,7 +91,7 @@ export default function VehicleDetailScreen() {
 
   const handleSchedule = useCallback(() => {
     setSelected(null);
-    // M6 — fluxo de agendamento
+    router.push('/(tabs)/map');
   }, []);
 
   return (

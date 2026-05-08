@@ -221,9 +221,7 @@ export default function HomeScreen() {
               <Button
                 label="Agendar serviço"
                 iconLeft={<Icon name="calendar-outline" size={18} color="inverse" />}
-                onPress={() => {
-                  /* M5 — fluxo de agendamento */
-                }}
+                onPress={() => router.push('/(tabs)/map')}
                 fullWidth
               />
             </View>

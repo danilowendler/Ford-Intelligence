@@ -15,6 +15,7 @@ import { ThemeProvider } from '@/theme/ThemeProvider';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useUserStore } from '@/stores/useUserStore';
 import { usePlanStore } from '@/stores/usePlanStore';
+import { useSchedulingStore } from '@/stores/useSchedulingStore';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import 'react-native-reanimated';
 
@@ -53,7 +54,9 @@ export default function RootLayout() {
   const status = useAuthStore((s) => s.status);
   const hydrateAuth = useAuthStore((s) => s.hydrate);
   const hydrateUser = useUserStore((s) => s.hydrate);
+  const hydrateScheduling = useSchedulingStore((s) => s.hydrate);
   const userHydrated = useUserStore((s) => s.hydrated);
+  const schedulingHydrated = useSchedulingStore((s) => s.hydrated);
   const userProfile = useUserStore((s) => s.profile);
   const setPlan = usePlanStore((s) => s.setPlan);
   const [hydrated, setHydrated] = useState(false);
@@ -64,8 +67,9 @@ export default function RootLayout() {
       hydrateOnce.current = true;
       hydrateAuth();
       hydrateUser();
+      hydrateScheduling();
     }
-  }, [status, hydrateAuth, hydrateUser]);
+  }, [status, hydrateAuth, hydrateUser, hydrateScheduling]);
 
   useEffect(() => {
     if (userProfile?.plan) {
@@ -75,10 +79,10 @@ export default function RootLayout() {
 
   useEffect(() => {
     const authReady = status === 'authenticated' || status === 'unauthenticated';
-    if (!hydrated && authReady && userHydrated) {
+    if (!hydrated && authReady && userHydrated && schedulingHydrated) {
       setHydrated(true);
     }
-  }, [status, userHydrated, hydrated]);
+  }, [status, userHydrated, schedulingHydrated, hydrated]);
 
   const ready = (fontsLoaded || fontError) && hydrated;
 
