@@ -29,8 +29,10 @@ function RootNavigator() {
   useProtectedRoute();
   return (
     <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
+      <Stack.Screen name="index" />
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="(analyst)" />
       <Stack.Screen
         name="_dev/design-system"
         options={{

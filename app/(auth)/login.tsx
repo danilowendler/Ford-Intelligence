@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, View } from 'react-native';
 import { Link } from 'expo-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button, Input, Screen, Text } from '@/components';
+import { Button, Icon, Input, Screen, Text } from '@/components';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useAuthStore } from '@/stores/useAuthStore';
 
@@ -15,10 +15,13 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>;
 
+const ANALYST_BLUE = '#1F6FEB';
+
 export default function LoginScreen() {
   const theme = useTheme();
   const login = useAuthStore((s) => s.login);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isAnalyst, setIsAnalyst] = useState(false);
 
   const {
     control,
@@ -32,7 +35,7 @@ export default function LoginScreen() {
   const onSubmit = handleSubmit(async (values) => {
     setSubmitError(null);
     try {
-      await login(values);
+      await login({ ...values, isAnalyst });
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Falha ao entrar.');
     }
@@ -51,7 +54,15 @@ export default function LoginScreen() {
           </Text>
         </View>
 
-        <View style={{ gap: theme.spacing.lg }}>
+        <View
+          style={{
+            gap: theme.spacing.lg,
+            borderWidth: isAnalyst ? 1 : 0,
+            borderColor: isAnalyst ? ANALYST_BLUE : 'transparent',
+            borderRadius: theme.radius.lg,
+            padding: isAnalyst ? theme.spacing.lg : 0,
+          }}
+        >
           <Input
             control={control}
             name="email"
@@ -85,6 +96,40 @@ export default function LoginScreen() {
             <Button label="Esqueci minha senha" variant="ghost" fullWidth />
           </Link>
         </View>
+
+        <Pressable
+          onPress={() => setIsAnalyst((v) => !v)}
+          style={({ pressed }) => ({
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: theme.spacing.sm,
+            opacity: pressed ? 0.7 : 1,
+            alignSelf: 'center',
+            paddingVertical: theme.spacing.sm,
+            paddingHorizontal: theme.spacing.md,
+            borderRadius: theme.radius.full,
+            borderWidth: 1,
+            borderColor: isAnalyst ? ANALYST_BLUE : theme.colors.border,
+            backgroundColor: isAnalyst
+              ? 'rgba(31,111,235,0.10)'
+              : 'transparent',
+          })}
+          accessibilityRole="checkbox"
+          accessibilityLabel="Entrar como Analista Ford"
+          accessibilityState={{ checked: isAnalyst }}
+        >
+          <Icon
+            name={isAnalyst ? 'shield-checkmark' : 'shield-outline'}
+            size={16}
+            color={isAnalyst ? 'accent' : 'muted'}
+          />
+          <Text
+            variant="caption"
+            color={isAnalyst ? 'accent' : 'muted'}
+          >
+            {isAnalyst ? 'Modo Analista Ford ativo' : 'Entrar como Analista Ford'}
+          </Text>
+        </Pressable>
 
         <View
           style={{
