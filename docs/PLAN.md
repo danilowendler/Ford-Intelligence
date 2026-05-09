@@ -283,18 +283,30 @@ Plano operacional dividido em milestones incrementais. Cada milestone tem **bran
 **Objetivo:** Área restrita do analista/concessionária com visão de "Service Share" e leads qualificados (mock).
 
 ### Entregas
-- [ ] `app/(analyst)/_layout.tsx` — stack com role-gate em `useAuthStore`
-- [ ] Login mock com toggle "Sou analista Ford" expõe área
-- [ ] `app/(analyst)/dashboard.tsx`:
-  - [ ] KPIs topo: VIN Share, leads ativos, agendamentos do mês, taxa de conversão
-  - [ ] Gráfico de barras (lib leve: `react-native-svg` custom ou `victory-native`)
-  - [ ] Lista de leads qualificados pela "IA" (mock) com score
-  - [ ] Filtros: período, plano do cliente, tipo de serviço
-- [ ] `app/(analyst)/leads/[id].tsx` — detalhe do lead + ações mock
-- [ ] `src/services/mocks/analystApi.ts` — KPIs, leads, séries temporais
-- [ ] Tema visual diferenciado (mais "data-dense", denso de informação)
+- [x] `app/(analyst)/_layout.tsx` — stack com role-gate duplo: role errado → tabs; não autenticado → login
+- [x] Login mock com toggle "Sou analista Ford" (Pressable com ícone shield + anel ford-blue quando ativo)
+- [x] `app/(analyst)/dashboard.tsx`:
+  - [x] KPIs topo: VIN Share, leads ativos, agendamentos do mês, taxa de conversão
+  - [x] Gráfico de barras custom (Views + Reanimated, zero deps novas) com pesos por plano
+  - [x] Lista de leads qualificados pela "IA" (mock) com score, ordenados por `aiScore` desc
+  - [x] Filtros: período (7d/30d/90d) e plano (Todos/Agro/Urban/Premium)
+- [x] `app/(analyst)/leads/[id].tsx` — detalhe do lead: AI score ring, contato, timeline, ações mock
+- [x] `src/services/mocks/analystApi.ts` — 12 leads, séries temporais por período×plano, KPIs com jitter ±3%
+- [x] `src/stores/useAnalystStore.ts` — Zustand sem persistência; seletores individuais; race-condition guard (`_seq`)
+- [x] Tema visual "data-dense" corporate — Cards sólidos, accent fordBlueLight fixo, tipografia uppercase densa
+- [x] `app/index.tsx` — tela neutra de índice para evitar flash de tabs em cold start de analista
+- [x] `src/services/mocks/authApi.ts` — `AuthUser` estendido com `role: 'client' | 'analyst'`
+- [x] `src/hooks/useProtectedRoute.ts` — branch por role; cliente não-em-tabs redirecionado sem flash
 
-**Commit final:** `feat(analyst): dashboard interno com KPIs e leads qualificados`
+**Status:** ✅ Concluído — branch `feat/m9-analyst-dashboard`
+**Commit final:** `feat(analyst): dashboard interno com KPIs e leads qualificados (+ audit fixes)`
+
+**Auditoria pós-implementação (Staff Review — 5 patches aplicados antes do commit):**
+- 🔴 **C1**: race condition em `fetchDashboard` — contador externo `_seq` descarta respostas obsoletas
+- 🔴 **C2**: gate do `(analyst)/_layout` não bloqueava `user === null` — corrigido para `!user || role !== 'analyst'`
+- 🟡 **W1**: `AnimatedBar` não cancelava `withTiming` no unmount — adicionado `cancelAnimation(height)` no cleanup
+- 🟡 **W2**: `BarChart` sem `React.memo` + `useAnalystStore()` sem seletores — envolvido em `memo()` e seletores individuais no dashboard
+- 🟡 **W3**: flash de 1–2 frames de tabs de cliente em cold start de analista — adicionado `app/index.tsx` neutro como rota inicial; `useProtectedRoute` atualizado para cobrir `!inTabsGroup`
 
 ---
 

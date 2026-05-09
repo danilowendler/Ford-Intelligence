@@ -1,7 +1,10 @@
+export type UserRole = 'client' | 'analyst';
+
 export type AuthUser = {
   id: string;
   name: string;
   email: string;
+  role: UserRole;
 };
 
 export type AuthResponse = {
@@ -12,6 +15,7 @@ export type AuthResponse = {
 export type LoginPayload = {
   email: string;
   password: string;
+  isAnalyst?: boolean;
 };
 
 export type SignupPayload = {
@@ -52,6 +56,7 @@ export async function login(payload: LoginPayload): Promise<AuthResponse> {
       id: `usr_${payload.email}`,
       name: deriveNameFromEmail(payload.email),
       email: payload.email,
+      role: payload.isAnalyst ? 'analyst' : 'client',
     },
   };
 }
@@ -64,6 +69,7 @@ export async function signup(payload: SignupPayload): Promise<AuthResponse> {
       id: `usr_${payload.email}`,
       name: payload.name,
       email: payload.email,
+      role: 'client',
     },
   };
 }
