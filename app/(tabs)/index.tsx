@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { Badge, Button, Card, GlassPanel, Icon, Text } from '@/components';
 import { useTheme } from '@/theme/ThemeProvider';
 import { planAccents } from '@/theme/plans';
@@ -15,6 +16,7 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { useUserStore, type VehicleModel } from '@/stores/useUserStore';
 import { useVehicleStore } from '@/stores/useVehicleStore';
 import { useAlertsStore } from '@/stores/useAlertsStore';
+import { usePlanStore } from '@/stores/usePlanStore';
 import type { TelemetryReading } from '@/features/telemetry/simulator';
 import { restartTelemetry, useTelemetry } from '@/features/telemetry/useTelemetry';
 import { TelemetryKpi, type TelemetryKpiTone } from '@/features/telemetry/TelemetryKpi';
@@ -24,6 +26,11 @@ import {
   fetchPredictedMaintenance,
   type PredictedMaintenance,
 } from '@/services/mocks/alertsApi';
+import { usePlanFeatures } from '@/features/plan-gates/usePlanFeatures';
+import { SmartRouteCard } from '@/features/plan-gates/SmartRouteCard';
+import { OneTapSchedulingButton } from '@/features/plan-gates/OneTapSchedulingButton';
+import { PlanAccentHaze } from '@/features/plan-gates/PlanAccentHaze';
+import { VoiceCommandFab } from '@/features/plan-gates/VoiceCommandFab';
 
 const VEHICLE_LABELS: Record<VehicleModel, string> = {
   ranger: 'Ford Ranger',
@@ -45,6 +52,7 @@ function lowestTirePsi(reading: TelemetryReading | null): number | null {
 
 export default function HomeScreen() {
   const theme = useTheme();
+  const tabBarHeight = useBottomTabBarHeight();
   const user = useAuthStore((s) => s.user);
   const profile = useUserStore((s) => s.profile);
 
@@ -53,14 +61,16 @@ export default function HomeScreen() {
   const syncAlerts = useAlertsStore((s) => s.syncFromEvaluation);
   const dismiss = useAlertsStore((s) => s.dismiss);
   const clearDismissed = useAlertsStore((s) => s.clearDismissed);
+  const plan = usePlanStore((s) => s.plan);
+  const features = usePlanFeatures();
 
   const [prediction, setPrediction] = useState<PredictedMaintenance | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (!reading) return;
-    syncAlerts(evaluateAlerts(reading));
-  }, [reading, syncAlerts]);
+    syncAlerts(evaluateAlerts(reading, plan));
+  }, [reading, syncAlerts, plan]);
 
   useEffect(() => {
     if (!reading || prediction) return;
@@ -157,10 +167,11 @@ export default function HomeScreen() {
       edges={['top', 'left', 'right']}
       style={{ flex: 1, backgroundColor: theme.colors.bgBase }}
     >
+      <PlanAccentHaze />
       <ScrollView
         contentContainerStyle={{
           padding: theme.spacing.lg,
-          paddingBottom: theme.spacing.xxxl,
+          paddingBottom: tabBarHeight + theme.spacing.lg,
           gap: theme.spacing.lg,
         }}
         showsVerticalScrollIndicator={false}
@@ -217,16 +228,22 @@ export default function HomeScreen() {
                 </View>
               </View>
             ) : null}
-            <View style={{ marginTop: theme.spacing.sm }}>
-              <Button
-                label="Agendar serviço"
-                iconLeft={<Icon name="calendar-outline" size={18} color="inverse" />}
-                onPress={() => router.push('/(tabs)/map')}
-                fullWidth
-              />
+            <View style={{ marginTop: theme.spacing.sm, gap: theme.spacing.sm }}>
+              {features.has('oneTapScheduling') ? (
+                <OneTapSchedulingButton />
+              ) : (
+                <Button
+                  label="Agendar serviço"
+                  iconLeft={<Icon name="calendar-outline" size={18} color="inverse" />}
+                  onPress={() => router.push('/(tabs)/map')}
+                  fullWidth
+                />
+              )}
             </View>
           </View>
         </Card>
+
+        {features.has('smartRoute') ? <SmartRouteCard /> : null}
 
         <View style={{ gap: theme.spacing.sm }}>
           <View style={styles.sectionHeader}>
@@ -309,6 +326,7 @@ export default function HomeScreen() {
           )}
         </View>
       </ScrollView>
+      {features.has('voiceCommand') ? <VoiceCommandFab /> : null}
     </SafeAreaView>
   );
 }

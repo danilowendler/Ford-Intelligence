@@ -12,6 +12,7 @@ import {
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemeProvider } from '@/theme/ThemeProvider';
+import { PlanSwitchPulse } from '@/features/plan-gates/PlanSwitchPulse';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useUserStore } from '@/stores/useUserStore';
 import { usePlanStore } from '@/stores/usePlanStore';
@@ -105,6 +106,7 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <ThemeProvider>
           <RootNavigator />
+          <PlanSwitchPulse />
           <StatusBar style="light" />
         </ThemeProvider>
       </SafeAreaProvider>

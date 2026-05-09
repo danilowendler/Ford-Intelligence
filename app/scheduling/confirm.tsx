@@ -154,7 +154,13 @@ export default function SchedulingConfirmStep() {
           variant="ghost"
           fullWidth
           disabled={submitting}
-          onPress={() => router.back()}
+          onPress={() => {
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace('/(tabs)/map');
+            }
+          }}
         />
       </View>
     </Screen>

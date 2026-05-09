@@ -26,7 +26,13 @@ export function StepHeader({
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md }}>
         {showBack ? (
           <Pressable
-            onPress={() => router.back()}
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.replace('/(tabs)/map');
+              }
+            }}
             hitSlop={10}
             accessibilityRole="button"
             accessibilityLabel="Voltar"

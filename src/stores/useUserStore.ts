@@ -30,6 +30,7 @@ type UserState = {
   updateDraft: (patch: DraftProfile) => void;
   resetDraft: () => void;
   commitProfile: (profile: UserProfile) => Promise<void>;
+  updatePlan: (plan: PlanId) => Promise<void>;
   clearProfile: () => Promise<void>;
 };
 
@@ -66,6 +67,18 @@ export const useUserStore = create<UserState>((set, get) => ({
       [ONBOARDING_FLAG, '1'],
     ]);
     set({ profile, onboardingComplete: true, draft: {} });
+  },
+
+  updatePlan: async (plan) => {
+    const cur = get().profile;
+    if (!cur || cur.plan === plan) return;
+    const next = { ...cur, plan };
+    try {
+      await AsyncStorage.setItem(PROFILE_KEY, JSON.stringify(next));
+      set({ profile: next });
+    } catch {
+      // mantém estado anterior em caso de falha de IO
+    }
   },
 
   clearProfile: async () => {
