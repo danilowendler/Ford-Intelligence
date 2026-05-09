@@ -187,22 +187,34 @@ Plano operacional dividido em milestones incrementais. Cada milestone tem **bran
 **Objetivo:** Mapa com concessionárias Ford próximas e fluxo completo de agendamento incluindo "leva e traz".
 
 ### Entregas
-- [ ] `app/(tabs)/map.tsx` — `<MapView>` com `react-native-maps`
-- [ ] `src/services/mocks/dealersApi.ts` — lista mock de concessionárias (nome, endereço, lat/long, promoções, distância)
-- [ ] Pins customizados Ford com badge de promoção
-- [ ] Bottom sheet ao tocar pin: nome, endereço, avaliação, promoções ativas, CTA "Agendar"
-- [ ] `app/scheduling/_layout.tsx` — stack do fluxo de agendamento
-  - [ ] Passo 1: Seleção do serviço (revisão / troca de óleo / pneus / outros)
-  - [ ] Passo 2: Modalidade (presencial / **leva e traz**)
-  - [ ] Passo 3: Endereço de retirada (se leva e traz) com mock geocoding
-  - [ ] Passo 4: Data e horário (calendário + slots disponíveis mockados)
-  - [ ] Passo 5: Confirmação com resumo + animação sucesso
-- [ ] `src/stores/useSchedulingStore.ts`
-- [ ] `src/services/mocks/schedulingApi.ts` — `createBooking()` com delay
-- [ ] Histórico de agendamentos em Perfil
-- [ ] Filtros no mapa: distância, promoções, serviços disponíveis
+- [x] `app/(tabs)/map.tsx` — `<MapView>` com `react-native-maps` (dark map style embarcado em `src/features/scheduling/mapStyle.ts`)
+- [x] `src/services/mocks/dealersApi.ts` — 10 concessionárias mock (nome, endereço, lat/long, promoções, serviços, rating) com `fetchDealers()` ordenando por distância (haversine em `src/utils/distance.ts`) + `fetchAddressSuggestions()` para geocoding mockado
+- [x] Pins customizados Ford com badge de promoção sensível ao plano (`src/features/scheduling/DealerPin.tsx`, memoizado)
+- [x] Bottom sheet glass ao tocar pin: nome, endereço, distância, rating, promoções ativas, lista de serviços, CTA "Agendar" (`src/features/scheduling/DealerSheet.tsx` — Modal RN + Reanimated `SlideInDown/Out` no padrão do `AlertSheet` do M5)
+- [x] `app/scheduling/_layout.tsx` — stack do fluxo de agendamento (`gestureEnabled: false`, animação `slide_from_right`)
+  - [x] Passo 1: Seleção do serviço — revisão / troca de óleo / pneus / diagnóstico / outros
+  - [x] Passo 2: Modalidade — presencial / **leva e traz** (badge "Premium" quando o plano permite VIP)
+  - [x] Passo 3: Endereço de retirada com sugestões mockadas + debounce 300ms (apenas para modalidade "leva e traz" — pulado automaticamente quando "presencial")
+  - [x] Passo 4: Data (FlatList horizontal de 10 dias) + slots disponíveis (`fetchAvailableSlots()` determinístico por dealer+data)
+  - [x] Passo 5: Confirmação com resumo em Card + checkbox de termos + animação de sucesso (Reanimated `withSequence` no check)
+- [x] `src/stores/useSchedulingStore.ts` — draft volátil + bookings persistidos em AsyncStorage; `startDraft(dealerId)` reseta cross-flow
+- [x] `src/services/mocks/schedulingApi.ts` — `createBooking()` (delay 500–800ms, protocolo `FRD-XXXXXX`) + `fetchAvailableSlots()` (delay 250ms)
+- [x] Histórico de agendamentos em Perfil (`src/features/scheduling/BookingListItem.tsx`) com cancelamento (Alert nativo + status "Cancelado")
+- [x] Filtros no mapa em `MapFiltersBar`: "Todas", "Com promoção", "Até 10km", "Revisão", "Pneus", "Óleo"
+- [x] Conexão com Home (M4) e detalhe 3D (M5) — CTA "Agendar serviço" agora navega para `/(tabs)/map`
+- [x] `mapPadding` dinâmico via `useBottomTabBarHeight()` + `useSafeAreaInsets()` para que copyright nativo do mapa fique acima da tab bar e centro geográfico respeite header
 
-**Commit final:** `feat(scheduling): mapa de concessionárias e fluxo leva-e-traz`
+**Status:** ✅ Concluído — commit `e8f6b4e` na branch `feat/m6-map-scheduling`
+**Commit final:** `feat(scheduling): mapa de concessionárias e fluxo leva-e-traz (+ audit fixes)`
+
+**Auditoria pós-implementação (Staff Review — 7 patches aplicados antes do commit):**
+- 🔴 **C1**: race + leak no debounce de `address.tsx` — `cancelled` movido para a closure do `useEffect` para que o cleanup realmente dispare em re-execução/unmount
+- 🟡 **W1**: `tracksViewChanges` virou one-shot via efeito timer (200ms) em `selectedId` — para de regenerar bitmap nativo continuamente enquanto pin está selecionado
+- 🟡 **W2**: `DealerPin` envolto em `React.memo` (props primitivas)
+- 🟡 **W3**: `setSubmitting(false)` movido do `finally` para o `catch` em `confirm.tsx` — evita warning de update em componente desmontado após `router.replace` no caminho feliz
+- 🟡 **W4**: `mapPadding` memoizado com `useMemo([insets.top, tabBarHeight])` — estabiliza prop nativa do `MapView`
+- 🟡 **W5**: `useSchedulingStore.hydrated` incluído no gate de boot do `app/_layout.tsx` — sem flash de empty state no Perfil
+- 🟡 **W6**: `e.stopPropagation?.()` no `Marker.onPress` removido (era no-op)
 
 ---
 
@@ -212,18 +224,19 @@ Plano operacional dividido em milestones incrementais. Cada milestone tem **bran
 **Objetivo:** Módulo de fidelidade com saldo, extrato, cupons geolocalizados em combustível e manutenção.
 
 ### Entregas
-- [ ] `app/(tabs)/wallet.tsx` — Tela principal da carteira
-- [ ] Card de saldo com glassmorphism + animação numérica de contagem
-- [ ] Aba "Extrato" — lista de transações (entrada/saída) com filtro por tipo
-- [ ] Aba "Cupons" — grid de cupons disponíveis
-- [ ] `src/features/cashback/CouponCard.tsx` — visual ticket-style com perfuração
-- [ ] Cupons geolocalizados: badge "Próximo a você" usando mock distance
-- [ ] `app/wallet/coupon/[id].tsx` — detalhe do cupom + QR code mock
-- [ ] `src/services/mocks/walletApi.ts` — saldo, extrato, cupons
-- [ ] `src/stores/useWalletStore.ts`
-- [ ] CTA "Resgatar em combustível" → modal de seleção de posto (mock)
-- [ ] Animação celebrativa ao receber novo cashback
+- [x] `app/(tabs)/wallet.tsx` — Tela principal da carteira
+- [x] Card de saldo com glassmorphism + animação numérica de contagem
+- [x] Aba "Extrato" — lista de transações (entrada/saída) com filtro por tipo
+- [x] Aba "Cupons" — grid de cupons disponíveis
+- [x] `src/features/cashback/CouponCard.tsx` — visual ticket-style com perfuração
+- [x] Cupons geolocalizados: badge "Próximo a você" usando mock distance
+- [x] `app/wallet/coupon/[id].tsx` — detalhe do cupom + QR code mock
+- [x] `src/services/mocks/walletApi.ts` — saldo, extrato, cupons
+- [x] `src/stores/useWalletStore.ts`
+- [x] CTA "Resgatar em combustível" → modal de seleção de posto (mock)
+- [x] Animação celebrativa ao receber novo cashback
 
+**Status:** ✅ Concluído — branch `feat/m7-cashback-wallet`
 **Commit final:** `feat(wallet): carteira de cashback com cupons e extrato`
 
 ---
