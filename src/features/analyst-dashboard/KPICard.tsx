@@ -1,5 +1,5 @@
 import { View } from 'react-native';
-import { Icon, Text, type IconName } from '@/components';
+import { Card, Icon, Text, type IconName } from '@/components';
 import { useTheme } from '@/theme/ThemeProvider';
 
 interface KPICardProps {
@@ -14,22 +14,7 @@ export function KPICard({ label, value, icon, delta, deltaPositive }: KPICardPro
   const theme = useTheme();
 
   return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: theme.colors.bgElevated,
-        borderRadius: theme.radius.lg,
-        borderWidth: 1,
-        borderColor: theme.colors.border,
-        padding: theme.spacing.md,
-        gap: theme.spacing.xs,
-        shadowColor: '#000',
-        shadowOpacity: 0.3,
-        shadowRadius: 12,
-        shadowOffset: { width: 0, height: 6 },
-        elevation: 6,
-      }}
-    >
+    <Card elevated padding="md" style={{ flex: 1, gap: theme.spacing.xs }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
         <View
           style={{
@@ -70,6 +55,6 @@ export function KPICard({ label, value, icon, delta, deltaPositive }: KPICardPro
       >
         {label}
       </Text>
-    </View>
+    </Card>
   );
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Alert, RefreshControl, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Badge, Button, Card, Text } from '@/components';
@@ -9,6 +9,7 @@ import { KPICard } from '@/features/analyst-dashboard/KPICard';
 import { BarChart } from '@/features/analyst-dashboard/BarChart';
 import { LeadCard } from '@/features/analyst-dashboard/LeadCard';
 import { FilterChipRow } from '@/features/analyst-dashboard/FilterChipRow';
+import { SkeletonBlock } from '@/features/analyst-dashboard/SkeletonBlock';
 import type { PeriodFilter, PlanFilter } from '@/services/mocks/analystApi';
 
 const PERIOD_OPTIONS = [
@@ -23,22 +24,6 @@ const PLAN_OPTIONS = [
   { key: 'urban', label: 'Urban' },
   { key: 'premium', label: 'Premium' },
 ];
-
-function SkeletonBlock({ height = 16, width }: { height?: number; width?: number | string }) {
-  const theme = useTheme();
-  return (
-    <View
-      style={{
-        height,
-        width: width as number | undefined,
-        backgroundColor: theme.colors.bgElevated,
-        borderRadius: theme.radius.sm,
-        borderWidth: 1,
-        borderColor: theme.colors.border,
-      }}
-    />
-  );
-}
 
 export default function AnalystDashboard() {
   const theme = useTheme();
@@ -58,9 +43,7 @@ export default function AnalystDashboard() {
     fetchDashboard();
   }, [fetchDashboard]);
 
-  const onRefresh = useCallback(() => {
-    fetchDashboard();
-  }, [fetchDashboard]);
+  const onRefresh = fetchDashboard;
 
   const handleLogout = () => {
     Alert.alert('Sair', 'Deseja encerrar a sessão de analista?', [
