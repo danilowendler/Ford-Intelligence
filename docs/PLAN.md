@@ -241,24 +241,39 @@ Plano operacional dividido em milestones incrementais. Cada milestone tem **bran
 
 ---
 
-## M8 — Diferenciação Visual por Plano SaaS
+## M8 — Diferenciação Visual & Funcional por Plano SaaS
 
 **Branch:** `feat/m8-plan-variants`
-**Objetivo:** Aplicar variantes visuais sutis (Agro / Urban / Premium) de forma harmônica em todas as telas.
+**Objetivo:** Aplicar variantes visuais e funcionais por plano (Agro / Urban / Premium) de forma harmônica em todas as telas, com features condicionais por plano.
 
 ### Entregas
-- [ ] Validar `src/theme/plans.ts` cobre todos os tokens necessários
-- [ ] Variantes de ícones por plano (rústico / minimalista / refinado) — set de ícones por plano
-- [ ] Background sutil diferenciado por plano (gradiente / textura / overlay)
-- [ ] Acento aplicado em: botões primários, badges, hotspots 3D, pin do mapa
-- [ ] Tela de troca de plano em Perfil com preview visual
-- [ ] Animação de transição de tema ao mudar plano (cross-fade)
-- [ ] **Plano Premium**: comandos de voz mock (botão de microfone fake) + agendamento "1-tap"
-- [ ] **Plano Agro**: alertas extra para terreno acidentado (mock)
-- [ ] **Plano Urban**: card "rota inteligente" mock na home
-- [ ] Validar contraste WCAG AA em todas as variantes
+- [x] `src/theme/plans.ts` — estendido com `tint`, `glow: {color, opacity, radius}` e `pressFeedback: 'sharp'|'soft'|'lift'`
+- [x] `src/theme/ThemeProvider.tsx` — expõe `theme.plan.surface` (blend de `bgElevated` + `tint`) e `theme.plan.id`
+- [x] `src/stores/useUserStore.ts` — método `updatePlan(plan)` persiste em AsyncStorage e sincroniza `usePlanStore` via `_layout.tsx`
+- [x] `src/features/plan-gates/usePlanFeatures.ts` — hook com catálogo centralizado de features por plano (sem `if (plan === x)` espalhados)
+- [x] `app/(tabs)/profile.tsx` — Card "Trocar plano" com 3 chips, confirmação nativa, feedback de loading
+- [x] `src/features/plan-gates/PlanSwitchPulse.tsx` — flash overlay accent + haptic Medium na troca de plano; monta apenas durante o pulso
+- [x] `src/features/plan-gates/PlanAccentHaze.tsx` — blob radial sutil com `tint` do plano, `pointerEvents="none"`, opt-in na Home
+- [x] `src/components/Button.tsx` — animação de press por plano: Agro=sharp (scale 0.92, 60ms), Urban=soft (scale+opacity, 120ms), Premium=lift (translateY+glow, 140ms)
+- [x] Acento aplicado em: botões primários, badges, hotspots 3D (halo idle), pins do mapa (borda selecionado + badge promo)
+- [x] **Plano Agro**: alerta `terrain` em `alertsApi.ts` quando spread de PSI ≥ 2.5; ícone `trail-sign-outline` em `AlertCard`
+- [x] **Plano Urban**: `SmartRouteCard` entre card de IA e KPIs na Home
+- [x] **Plano Premium**: `OneTapSchedulingButton` (dealer mais próximo + próximo slot → confirm em 1 toque) e `VoiceCommandFab` com modal waveform Reanimated
+- [x] `src/features/vehicle3d/CarMesh.tsx` — accent via `material.color.set()` + `invalidate()` em faixa do teto, strip traseiro e aros das rodas; body permanece azul Ford; sem leak de GPU
+- [x] `src/features/vehicle3d/Hotspot.tsx` — halo externo em `theme.plan.accent` no estado idle (assinatura do plano sem colidir com warn/critical)
+- [x] Contraste WCAG AA validado: Agro 8.4:1, Urban 14:1, Premium 16:1 vs `bgBase`
+- [x] `app/(tabs)/map.web.tsx` + `metro.config.js` — stub de `react-native-maps` no web via Metro resolver; fallback de tela para web
+- [x] Fix de navegação: `StepHeader` e `confirm.tsx` com `router.canGoBack()` fallback para `router.replace('/(tabs)/map')`
+- [x] Fix de mapa: race `MapView.onPress` × `Marker.onPress` resolvido com guard `nativeEvent.action` + timestamp ref; `initialTracking` por 600ms após carregamento dos dealers
 
-**Commit final:** `feat(plans): diferenciação visual e funcional Agro/Urban/Premium`
+**Status:** ✅ Concluído — commit `a29ebe5` na `main` (squash do PR #7)
+**Commit final:** `feat(plans): diferenciação visual e funcional Agro/Urban/Premium (+ audit fixes)`
+
+**Auditoria pós-implementação (Staff Review — 4 patches aplicados antes do merge):**
+- 🟡 **A1**: `accentMaterial.needsUpdate = true` removido de `CarMesh.tsx` — `color.set()` não exige recompile de shader GPU
+- 🟡 **A2**: callback `withTiming` em `PlanSwitchPulse` verifica `finished` antes de `setPulsing(false)` — evita desmontagem prematura em troca rápida de plano
+- 🟡 **A3**: `VoiceCommandFab` migrado para `useBottomTabBarHeight()` — eliminado double-count do safe area bottom inset em devices com notch
+- 🟡 **A4**: aros das rodas (`Wheel`) passaram a receber `accentMaterial` compartilhado via prop — cobre spec original do M8
 
 ---
 
