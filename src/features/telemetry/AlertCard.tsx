@@ -11,6 +11,7 @@ const ICON_BY_CATEGORY: Record<AlertCategory, IconName> = {
   engine: 'thermometer-outline',
   fuel: 'water-outline',
   battery: 'battery-half-outline',
+  terrain: 'trail-sign-outline',
 };
 
 export type AlertCardProps = {

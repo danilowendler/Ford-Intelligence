@@ -1,6 +1,7 @@
 import { useEffect, useRef, type MutableRefObject } from 'react';
 import { useFrame } from '@react-three/fiber/native';
 import * as THREE from 'three';
+import { useTheme } from '@/theme/ThemeProvider';
 import type { HotspotCategory, HotspotSeverity } from './derive';
 
 const COLORS: Record<HotspotSeverity, string> = {
@@ -10,7 +11,7 @@ const COLORS: Record<HotspotSeverity, string> = {
 };
 
 const PULSE_SPEED: Record<HotspotSeverity, number> = {
-  idle: 0,
+  idle: 1.6,
   warn: 3.4,
   critical: 5.6,
 };
@@ -25,6 +26,7 @@ export type HotspotProps = {
 };
 
 export function Hotspot({ category, severity, position, registry }: HotspotProps) {
+  const theme = useTheme();
   const meshRef = useRef<THREE.Mesh | null>(null);
   const haloRef = useRef<THREE.Mesh | null>(null);
 
@@ -62,6 +64,7 @@ export function Hotspot({ category, severity, position, registry }: HotspotProps
 
   const color = COLORS[severity];
   const isActive = severity !== 'idle';
+  const haloColor = isActive ? color : theme.plan.accent;
 
   return (
     <group position={position}>
@@ -75,12 +78,15 @@ export function Hotspot({ category, severity, position, registry }: HotspotProps
           metalness={0.1}
         />
       </mesh>
-      {isActive ? (
-        <mesh ref={haloRef}>
-          <sphereGeometry args={[BASE_RADIUS * 1.6, 16, 16]} />
-          <meshBasicMaterial color={color} transparent opacity={0.25} depthWrite={false} />
-        </mesh>
-      ) : null}
+      <mesh ref={haloRef}>
+        <sphereGeometry args={[BASE_RADIUS * 1.6, 16, 16]} />
+        <meshBasicMaterial
+          color={haloColor}
+          transparent
+          opacity={isActive ? 0.25 : 0.18}
+          depthWrite={false}
+        />
+      </mesh>
     </group>
   );
 }

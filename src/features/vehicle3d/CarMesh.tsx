@@ -1,34 +1,37 @@
 import { useEffect, useMemo } from 'react';
+import { useThree } from '@react-three/fiber/native';
 import * as THREE from 'three';
+import { useTheme } from '@/theme/ThemeProvider';
 
 const FORD_BLUE = '#1F6FEB';
 const BODY_BLUE = '#1F6FEB';
 const BODY_EMISSIVE = '#0A2050';
 const CABIN_GLASS = '#152033';
 const TIRE_COLOR = '#0A0E14';
-const RIM_COLOR = '#5A6478';
 const HEADLIGHT_COLOR = '#FFE9A8';
 
 type WheelProps = {
   position: [number, number, number];
+  rimMaterial: THREE.MeshStandardMaterial;
 };
 
-function Wheel({ position }: WheelProps) {
+function Wheel({ position, rimMaterial }: WheelProps) {
   return (
     <group position={position}>
       <mesh rotation={[0, 0, Math.PI / 2]} castShadow receiveShadow>
         <cylinderGeometry args={[0.42, 0.42, 0.32, 24]} />
         <meshStandardMaterial color={TIRE_COLOR} roughness={0.95} metalness={0.05} />
       </mesh>
-      <mesh rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry args={[0.22, 0.22, 0.34, 16]} />
-        <meshStandardMaterial color={RIM_COLOR} roughness={0.4} metalness={0.85} />
-      </mesh>
+      <mesh rotation={[0, 0, Math.PI / 2]} material={rimMaterial} castShadow />
     </group>
   );
 }
 
 export function CarMesh() {
+  const theme = useTheme();
+  const planAccent = theme.plan.accent;
+  const { invalidate } = useThree();
+
   const bodyMaterial = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
@@ -44,12 +47,13 @@ export function CarMesh() {
   const accentMaterial = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
-        color: FORD_BLUE,
-        metalness: 0.3,
-        roughness: 0.45,
-        emissive: BODY_EMISSIVE,
-        emissiveIntensity: 0.4,
+        color: planAccent,
+        metalness: 0.35,
+        roughness: 0.4,
+        emissive: planAccent,
+        emissiveIntensity: 0.45,
       }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
 
@@ -75,6 +79,12 @@ export function CarMesh() {
       }),
     [],
   );
+
+  useEffect(() => {
+    accentMaterial.color.set(planAccent);
+    accentMaterial.emissive.set(planAccent);
+    invalidate();
+  }, [planAccent, accentMaterial, invalidate]);
 
   useEffect(() => {
     return () => {
@@ -117,6 +127,10 @@ export function CarMesh() {
         />
       </mesh>
 
+      <mesh position={[0, 0.78, -2.225]} material={accentMaterial} castShadow>
+        <boxGeometry args={[1.6, 0.06, 0.04]} />
+      </mesh>
+
       <mesh position={[-0.65, 1.05, 2.21]} material={headlightMaterial}>
         <boxGeometry args={[0.45, 0.14, 0.08]} />
       </mesh>
@@ -143,10 +157,10 @@ export function CarMesh() {
         />
       </mesh>
 
-      <Wheel position={[-1.05, 0.42, 1.45]} />
-      <Wheel position={[1.05, 0.42, 1.45]} />
-      <Wheel position={[-1.05, 0.42, -1.45]} />
-      <Wheel position={[1.05, 0.42, -1.45]} />
+      <Wheel position={[-1.05, 0.42, 1.45]} rimMaterial={accentMaterial} />
+      <Wheel position={[1.05, 0.42, 1.45]} rimMaterial={accentMaterial} />
+      <Wheel position={[-1.05, 0.42, -1.45]} rimMaterial={accentMaterial} />
+      <Wheel position={[1.05, 0.42, -1.45]} rimMaterial={accentMaterial} />
 
       <mesh
         position={[0, 0, 0]}

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE, type Region } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE, type MapPressEvent, type Region } from 'react-native-maps';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
@@ -47,7 +47,9 @@ export default function MapScreen() {
   const [filter, setFilter] = useState<MapFilterId>('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [trackingId, setTrackingId] = useState<string | null>(null);
+  const [initialTracking, setInitialTracking] = useState(true);
   const mapRef = useRef<MapView | null>(null);
+  const lastMarkerTapRef = useRef(0);
 
   useEffect(() => {
     if (!selectedId) {
@@ -58,6 +60,12 @@ export default function MapScreen() {
     const t = setTimeout(() => setTrackingId(null), 200);
     return () => clearTimeout(t);
   }, [selectedId]);
+
+  useEffect(() => {
+    if (loading) return;
+    const t = setTimeout(() => setInitialTracking(false), 600);
+    return () => clearTimeout(t);
+  }, [loading]);
 
   useEffect(() => {
     let cancelled = false;
@@ -79,6 +87,7 @@ export default function MapScreen() {
   );
 
   const handleSelect = useCallback((dealer: Dealer) => {
+    lastMarkerTapRef.current = Date.now();
     setSelectedId(dealer.id);
     mapRef.current?.animateToRegion(
       {
@@ -89,6 +98,12 @@ export default function MapScreen() {
       },
       320,
     );
+  }, []);
+
+  const handleMapPress = useCallback((e: MapPressEvent) => {
+    if (e.nativeEvent.action === 'marker-press') return;
+    if (Date.now() - lastMarkerTapRef.current < 350) return;
+    setSelectedId(null);
   }, []);
 
   const handleSchedule = useCallback(
@@ -125,7 +140,7 @@ export default function MapScreen() {
         showsBuildings={false}
         toolbarEnabled={false}
         mapPadding={mapPadding}
-        onPress={() => setSelectedId(null)}
+        onPress={handleMapPress}
       >
         {visibleDealers.map((dealer) => (
           <Marker
@@ -133,7 +148,7 @@ export default function MapScreen() {
             coordinate={dealer.coords}
             onPress={() => handleSelect(dealer)}
             anchor={{ x: 0.5, y: 0.5 }}
-            tracksViewChanges={trackingId === dealer.id}
+            tracksViewChanges={initialTracking || trackingId === dealer.id}
           >
             <DealerPin
               selected={selectedId === dealer.id}

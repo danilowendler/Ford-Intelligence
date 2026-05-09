@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { Alert, Platform, View } from 'react-native';
+import { Alert, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { Badge, Button, Card, GlassPanel, Icon, Screen, Text } from '@/components';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { usePlanStore } from '@/stores/usePlanStore';
+import { useUserStore } from '@/stores/useUserStore';
 import { useSchedulingStore } from '@/stores/useSchedulingStore';
 import { BookingListItem } from '@/features/scheduling/BookingListItem';
+import { planAccents, planIds, type PlanId } from '@/theme/plans';
 import type { Booking } from '@/types/scheduling';
 
 export default function ProfileScreen() {
@@ -13,9 +16,36 @@ export default function ProfileScreen() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const plan = usePlanStore((s) => s.plan);
+  const profile = useUserStore((s) => s.profile);
+  const updatePlan = useUserStore((s) => s.updatePlan);
   const bookings = useSchedulingStore((s) => s.bookings);
   const cancelBooking = useSchedulingStore((s) => s.cancelBooking);
+  const tabBarHeight = useBottomTabBarHeight();
   const [signingOut, setSigningOut] = useState(false);
+  const [switchingPlan, setSwitchingPlan] = useState<PlanId | null>(null);
+
+  const requestPlanSwitch = (next: PlanId) => {
+    if (next === plan || switchingPlan) return;
+    const label = planAccents[next].label;
+    const message = `Trocar para o plano ${label}? A interface se adapta na hora.`;
+    const apply = async () => {
+      setSwitchingPlan(next);
+      try {
+        await updatePlan(next);
+      } finally {
+        setSwitchingPlan(null);
+      }
+    };
+    if (Platform.OS === 'web') {
+      const ok = typeof window !== 'undefined' && window.confirm(message);
+      if (ok) apply();
+      return;
+    }
+    Alert.alert(`Trocar para ${label}?`, message, [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Trocar', onPress: apply },
+    ]);
+  };
 
   const performLogout = async () => {
     setSigningOut(true);
@@ -63,7 +93,7 @@ export default function ProfileScreen() {
   const activeBookings = bookings.filter((b) => b.status === 'confirmed');
 
   return (
-    <Screen scroll>
+    <Screen scroll contentContainerStyle={{ paddingBottom: tabBarHeight + theme.spacing.lg }}>
       <View style={{ gap: theme.spacing.xs, marginTop: theme.spacing.lg }}>
         <Text variant="h1">Perfil</Text>
         <Text variant="body" color="muted">
@@ -81,10 +111,88 @@ export default function ProfileScreen() {
             {user?.email ?? '—'}
           </Text>
           <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
-            <Badge label={`Plano ${plan}`} tone="accent" />
+            <Badge label={`Plano ${planAccents[plan].label}`} tone="accent" />
           </View>
         </View>
       </Card>
+
+      {profile ? (
+        <Card>
+          <View style={{ gap: theme.spacing.md }}>
+            <View style={{ gap: theme.spacing.xs }}>
+              <Text variant="caption" color="muted" style={{ textTransform: 'uppercase', letterSpacing: 0.6 }}>
+                PLANO SAAS
+              </Text>
+              <Text variant="h3">Trocar plano</Text>
+              <Text variant="body" color="muted">
+                A interface se ajusta ao plano: cores, alertas e atalhos exclusivos.
+              </Text>
+            </View>
+            <View style={{ gap: theme.spacing.sm }}>
+              {planIds.map((id) => {
+                const accent = planAccents[id];
+                const selected = id === plan;
+                const busy = switchingPlan === id;
+                return (
+                  <Pressable
+                    key={id}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected, busy }}
+                    accessibilityLabel={`Selecionar plano ${accent.label}`}
+                    disabled={busy || (switchingPlan !== null && !selected)}
+                    onPress={() => requestPlanSwitch(id)}
+                    style={({ pressed }) => [
+                      styles.planChip,
+                      {
+                        backgroundColor: selected ? accent.accentSoft : theme.colors.bgElevated,
+                        borderColor: selected ? accent.accent : theme.colors.border,
+                        borderRadius: theme.radius.md,
+                        paddingHorizontal: theme.spacing.lg,
+                        paddingVertical: theme.spacing.md,
+                        opacity: pressed ? 0.85 : 1,
+                      },
+                    ]}
+                  >
+                    <View
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: 14,
+                        backgroundColor: accent.accent,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Icon
+                        name={
+                          id === 'agro'
+                            ? 'leaf-outline'
+                            : id === 'urban'
+                              ? 'business-outline'
+                              : 'sparkles-outline'
+                        }
+                        size={16}
+                        color="inverse"
+                      />
+                    </View>
+                    <View style={{ flex: 1, gap: 2 }}>
+                      <Text variant="bodyStrong">{accent.label}</Text>
+                      <Text variant="caption" color="muted">
+                        {accent.description}
+                      </Text>
+                    </View>
+                    {selected ? (
+                      <Icon name="checkmark-circle" size={22} color="accent" />
+                    ) : (
+                      <Icon name="chevron-forward" size={18} color="muted" />
+                    )}
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        </Card>
+      ) : null}
 
       <View style={{ gap: theme.spacing.sm }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -123,3 +231,12 @@ export default function ProfileScreen() {
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  planChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderWidth: 1,
+  },
+});

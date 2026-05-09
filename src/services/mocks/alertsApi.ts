@@ -1,4 +1,5 @@
 import type { TelemetryReading } from '@/features/telemetry/simulator';
+import type { PlanId } from '@/theme/plans';
 
 export type AlertSeverity = 'warn' | 'critical';
 
@@ -8,7 +9,8 @@ export type AlertCategory =
   | 'tire-high'
   | 'engine'
   | 'fuel'
-  | 'battery';
+  | 'battery'
+  | 'terrain';
 
 export type Alert = {
   id: string;
@@ -26,6 +28,7 @@ const ENGINE_TEMP_WARN = 100;
 const ENGINE_TEMP_CRITICAL = 108;
 const FUEL_LOW_PCT = 15;
 const BATTERY_LOW_VOLTS = 11.8;
+const TERRAIN_TIRE_SPREAD_PSI = 2.5;
 
 export function alertKey(category: AlertCategory, severity: AlertSeverity): string {
   return `${category}:${severity}`;
@@ -55,7 +58,7 @@ function highestTire(reading: TelemetryReading): { name: string; psi: number } {
   return entries.reduce((max, cur) => (cur.psi > max.psi ? cur : max), entries[0]);
 }
 
-export function evaluateAlerts(reading: TelemetryReading): Alert[] {
+export function evaluateAlerts(reading: TelemetryReading, plan?: PlanId): Alert[] {
   const out: Alert[] = [];
   const ts = reading.timestamp;
 
@@ -134,6 +137,20 @@ export function evaluateAlerts(reading: TelemetryReading): Alert[] {
       description: `Tensão em ${reading.batteryVolts.toFixed(2)}V. Agende inspeção elétrica.`,
       createdAt: ts,
     });
+  }
+
+  if (plan === 'agro') {
+    const tireSpread = maxTire.psi - minTire.psi;
+    if (tireSpread >= TERRAIN_TIRE_SPREAD_PSI) {
+      out.push({
+        id: alertKey('terrain', 'warn'),
+        category: 'terrain',
+        severity: 'warn',
+        title: 'Terreno irregular detectado',
+        description: `Variação de ${tireSpread.toFixed(1)} PSI entre pneus. Reduza velocidade e monitore a suspensão.`,
+        createdAt: ts,
+      });
+    }
   }
 
   return out;

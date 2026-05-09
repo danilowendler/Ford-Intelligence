@@ -10,6 +10,7 @@ type SchedulingState = {
   bookings: Booking[];
   hydrate: () => Promise<void>;
   startDraft: (dealerId: string) => void;
+  startDraftWithSuggestion: (suggestion: SchedulingDraft) => void;
   updateDraft: (patch: Partial<SchedulingDraft>) => void;
   resetDraft: () => void;
   commitBooking: (booking: Booking) => Promise<void>;
@@ -33,6 +34,8 @@ export const useSchedulingStore = create<SchedulingState>((set, get) => ({
   },
 
   startDraft: (dealerId) => set({ draft: { dealerId } }),
+
+  startDraftWithSuggestion: (suggestion) => set({ draft: { ...suggestion } }),
 
   updateDraft: (patch) => set((state) => ({ draft: { ...state.draft, ...patch } })),
 
