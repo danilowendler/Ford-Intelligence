@@ -2,48 +2,9 @@ import { Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Badge, Card, Icon, Text } from '@/components';
 import { useTheme } from '@/theme/ThemeProvider';
-import type { Lead, RiskLabel, LeadStatus } from '@/services/mocks/analystApi';
-
-const VEHICLE_LABEL: Record<Lead['vehicleModel'], string> = {
-  ranger: 'Ranger',
-  maverick: 'Maverick',
-  territory: 'Territory',
-  mustang: 'Mustang',
-};
-
-const PLAN_LABEL: Record<Lead['plan'], string> = {
-  agro: 'Agro',
-  urban: 'Urban',
-  premium: 'Premium',
-};
-
-const STATUS_LABEL: Record<LeadStatus, string> = {
-  novo: 'Novo',
-  contactado: 'Contactado',
-  convertido: 'Convertido',
-  perdido: 'Perdido',
-};
-
-const STATUS_TONE: Record<LeadStatus, 'info' | 'warn' | 'success' | 'neutral' | 'critical' | 'accent'> = {
-  novo: 'accent',
-  contactado: 'warn',
-  convertido: 'success',
-  perdido: 'neutral',
-};
-
-const RISK_TONE: Record<RiskLabel, 'info' | 'warn' | 'success' | 'neutral' | 'critical' | 'accent'> = {
-  alto: 'critical',
-  moderado: 'warn',
-  baixo: 'success',
-};
-
-function daysAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const days = Math.floor(diff / 86_400_000);
-  if (days === 0) return 'hoje';
-  if (days === 1) return '1 dia atrás';
-  return `${days} dias atrás`;
-}
+import type { Lead } from '@/services/mocks/analystApi';
+import { VEHICLE_LABEL, PLAN_LABEL, STATUS_LABEL, STATUS_TONE, RISK_TONE } from './leadDisplayMaps';
+import { daysAgo } from '@/utils/date';
 
 interface LeadCardProps {
   lead: Lead;
@@ -89,7 +50,7 @@ export function LeadCard({ lead }: LeadCardProps) {
           </Text>
         </View>
 
-        {/* Row 3: last activity + status */}
+        {/* Row 3: last activity + status + revenue */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1 }}>
             <Icon name="time-outline" size={13} color="muted" />
@@ -98,11 +59,9 @@ export function LeadCard({ lead }: LeadCardProps) {
             </Text>
           </View>
           <Badge label={STATUS_LABEL[lead.status]} tone={STATUS_TONE[lead.status]} />
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-            <Text variant="caption" color="muted">
-              R$ {lead.estimatedRevenue.toLocaleString('pt-BR')}
-            </Text>
-          </View>
+          <Text variant="caption" color="muted">
+            R$ {lead.estimatedRevenue.toLocaleString('pt-BR')}
+          </Text>
         </View>
       </Card>
     </Pressable>

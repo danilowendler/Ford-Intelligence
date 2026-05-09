@@ -13,8 +13,6 @@ import type { BarPoint } from '@/services/mocks/analystApi';
 
 const MAX_BAR_HEIGHT = 110;
 const BAR_WIDTH = 10;
-const FORD_BLUE = '#1F6FEB';
-const SUCCESS_GREEN = '#30A46C';
 
 interface BarProps {
   targetHeight: number;
@@ -36,7 +34,7 @@ function AnimatedBar({ targetHeight, color, delay }: BarProps) {
       clearTimeout(t);
       cancelAnimation(height);
     };
-  }, [targetHeight, delay, height]);
+  }, [targetHeight, delay]); // eslint-disable-line react-hooks/exhaustive-deps -- shared value ref is stable
 
   const style = useAnimatedStyle(() => ({ height: height.value }));
 
@@ -73,11 +71,11 @@ export const BarChart = memo(function BarChart({ data }: BarChartProps) {
       {/* Legend */}
       <View style={{ flexDirection: 'row', gap: theme.spacing.lg }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs }}>
-          <View style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: FORD_BLUE }} />
+          <View style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: theme.colors.fordBlueLight }} />
           <Text variant="caption" color="muted">Agendamentos</Text>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs }}>
-          <View style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: SUCCESS_GREEN }} />
+          <View style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: theme.colors.success }} />
           <Text variant="caption" color="muted">Conversões</Text>
         </View>
       </View>
@@ -141,8 +139,8 @@ export const BarChart = memo(function BarChart({ data }: BarChartProps) {
                       height: MAX_BAR_HEIGHT,
                     }}
                   >
-                    <AnimatedBar targetHeight={bH} color={FORD_BLUE} delay={i * 60} />
-                    <AnimatedBar targetHeight={cH} color={SUCCESS_GREEN} delay={i * 60 + 80} />
+                    <AnimatedBar targetHeight={bH} color={theme.colors.fordBlueLight} delay={i * 60} />
+                    <AnimatedBar targetHeight={cH} color={theme.colors.success} delay={i * 60 + 80} />
                   </View>
                   <Text variant="caption" color="muted" style={{ fontSize: 9 }}>
                     {point.label}

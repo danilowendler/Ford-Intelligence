@@ -279,17 +279,18 @@ const LEAD_DETAILS: Record<string, Omit<LeadDetail, keyof Lead>> = {
   },
 };
 
+const SVC_MAP: Record<string, string[]> = {
+  revision: ['Revisão Preventiva', 'Revisão Completa'],
+  'oil-change': ['Troca de Óleo'],
+  tires: ['Troca de Pneus'],
+  diagnostics: ['Diagnóstico', 'Diagnóstico Premium'],
+};
+
 function applyFilters(leads: Lead[], filters: AnalystFilters): Lead[] {
   return leads.filter((l) => {
     if (filters.plan !== 'all' && l.plan !== filters.plan) return false;
     if (filters.service !== 'all') {
-      const svcMap: Record<string, string[]> = {
-        revision: ['Revisão Preventiva', 'Revisão Completa'],
-        'oil-change': ['Troca de Óleo'],
-        tires: ['Troca de Pneus'],
-        diagnostics: ['Diagnóstico', 'Diagnóstico Premium'],
-      };
-      const allowed = svcMap[filters.service];
+      const allowed = SVC_MAP[filters.service];
       if (allowed && !allowed.includes(l.service)) return false;
     }
     return true;
@@ -319,7 +320,7 @@ export async function fetchSeries(filters: AnalystFilters): Promise<BarPoint[]> 
   await delay(250, 450);
   const base = SERIES_DATA[filters.period];
   const w = PLAN_WEIGHTS[filters.plan];
-  if (filters.plan === 'all') return base;
+  if (filters.plan === 'all') return [...base];
   return base.map((p) => {
     const bookings = Math.max(1, Math.round(p.bookings * w.bookings));
     const conversions = Math.min(

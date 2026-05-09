@@ -19,7 +19,7 @@ function Chip({ label, selected, onPress }: ChipProps) {
         paddingHorizontal: theme.spacing.md,
         borderRadius: theme.radius.full,
         borderWidth: 1,
-        borderColor: selected ? '#1F6FEB' : theme.colors.border,
+        borderColor: selected ? theme.colors.fordBlueLight : theme.colors.border,
         backgroundColor: selected ? 'rgba(31,111,235,0.15)' : theme.colors.bgElevated,
         opacity: pressed ? 0.75 : 1,
       })}
@@ -29,7 +29,7 @@ function Chip({ label, selected, onPress }: ChipProps) {
       <Text
         variant="caption"
         style={{
-          color: selected ? '#6FA3FF' : theme.colors.textMuted,
+          color: selected ? theme.colors.fordBlueLight : theme.colors.textMuted,
           fontWeight: selected ? '600' : '400',
         }}
       >

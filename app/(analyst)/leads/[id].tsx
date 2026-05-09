@@ -4,64 +4,10 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Badge, Button, Card, GlassPanel, Icon, Text, type IconName } from '@/components';
 import { useTheme } from '@/theme/ThemeProvider';
-import { fetchLeadById, type LeadDetail, type RiskLabel, type LeadStatus } from '@/services/mocks/analystApi';
-
-const VEHICLE_LABEL: Record<LeadDetail['vehicleModel'], string> = {
-  ranger: 'Ranger',
-  maverick: 'Maverick',
-  territory: 'Territory',
-  mustang: 'Mustang',
-};
-
-const PLAN_LABEL: Record<LeadDetail['plan'], string> = {
-  agro: 'Agro',
-  urban: 'Urban',
-  premium: 'Premium',
-};
-
-const RISK_TONE: Record<RiskLabel, 'info' | 'warn' | 'success' | 'neutral' | 'critical' | 'accent'> = {
-  alto: 'critical',
-  moderado: 'warn',
-  baixo: 'success',
-};
-
-const STATUS_TONE: Record<LeadStatus, 'info' | 'warn' | 'success' | 'neutral' | 'critical' | 'accent'> = {
-  novo: 'accent',
-  contactado: 'warn',
-  convertido: 'success',
-  perdido: 'neutral',
-};
-
-const STATUS_LABEL: Record<LeadStatus, string> = {
-  novo: 'Novo',
-  contactado: 'Contactado',
-  convertido: 'Convertido',
-  perdido: 'Perdido',
-};
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-function SkeletonBlock({ height = 16 }: { height?: number }) {
-  const theme = useTheme();
-  return (
-    <View
-      style={{
-        height,
-        backgroundColor: theme.colors.bgElevated,
-        borderRadius: theme.radius.sm,
-        borderWidth: 1,
-        borderColor: theme.colors.border,
-      }}
-    />
-  );
-}
+import { fetchLeadById, type LeadDetail } from '@/services/mocks/analystApi';
+import { VEHICLE_LABEL, PLAN_LABEL, STATUS_LABEL, STATUS_TONE, RISK_TONE } from '@/features/analyst-dashboard/leadDisplayMaps';
+import { SkeletonBlock } from '@/features/analyst-dashboard/SkeletonBlock';
+import { formatDate } from '@/utils/date';
 
 export default function LeadDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -160,7 +106,7 @@ export default function LeadDetailScreen() {
 
       <FlatList
         data={loading ? [] : (lead?.timeline ?? [])}
-        keyExtractor={(_, i) => String(i)}
+        keyExtractor={(item) => item.date}
         contentContainerStyle={{
           paddingHorizontal: theme.spacing.lg,
           paddingTop: theme.spacing.xl,
@@ -186,12 +132,11 @@ export default function LeadDetailScreen() {
                       height: 80,
                       borderRadius: 40,
                       borderWidth: 3,
-                      borderColor:
-                        lead.riskLabel === 'alto'
-                          ? theme.colors.alertCritical
-                          : lead.riskLabel === 'moderado'
-                          ? theme.colors.alertWarn
-                          : theme.colors.success,
+                      borderColor: {
+                        alto: theme.colors.alertCritical,
+                        moderado: theme.colors.alertWarn,
+                        baixo: theme.colors.success,
+                      }[lead.riskLabel],
                       alignItems: 'center',
                       justifyContent: 'center',
                     }}
