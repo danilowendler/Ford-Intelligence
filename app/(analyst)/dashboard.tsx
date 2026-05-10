@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { Alert, RefreshControl, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Badge, Button, Card, Text } from '@/components';
@@ -6,11 +6,12 @@ import { useTheme } from '@/theme/ThemeProvider';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useAnalystStore } from '@/stores/useAnalystStore';
 import { KPICard } from '@/features/analyst-dashboard/KPICard';
-import { BarChart } from '@/features/analyst-dashboard/BarChart';
 import { LeadCard } from '@/features/analyst-dashboard/LeadCard';
 import { FilterChipRow } from '@/features/analyst-dashboard/FilterChipRow';
 import { SkeletonBlock } from '@/features/analyst-dashboard/SkeletonBlock';
 import type { PeriodFilter, PlanFilter } from '@/services/mocks/analystApi';
+
+const BarChart = lazy(() => import('@/features/analyst-dashboard/BarChartLazyEntry'));
 
 const PERIOD_OPTIONS = [
   { key: '7d', label: '7 dias' },
@@ -163,7 +164,9 @@ export default function AnalystDashboard() {
         {loading && series.length === 0 ? (
           <SkeletonBlock height={140} />
         ) : series.length > 0 ? (
-          <BarChart data={series} />
+          <Suspense fallback={<SkeletonBlock height={140} />}>
+            <BarChart data={series} />
+          </Suspense>
         ) : null}
       </Card>
 
