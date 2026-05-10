@@ -19,7 +19,6 @@ export function useProtectedRoute() {
     const inAuthGroup    = segments[0] === '(auth)';
     const inOnboarding   = inAuthGroup && segments[1] === 'onboarding';
     const inAnalystGroup = (segments[0] as string) === '(analyst)';
-    const inTabsGroup    = (segments[0] as string) === '(tabs)';
 
     if (!isAuthenticated) {
       // Cover the neutral index screen and any leaked analyst/tabs route
@@ -45,8 +44,16 @@ export function useProtectedRoute() {
       return;
     }
 
-    // Authenticated client not yet in the tabs group (covers index, auth, analyst routes)
-    if (!inTabsGroup) {
+    // Authenticated client. Lista de rotas/grupos onde o cliente NAO deve estar:
+    // - (auth)/* e (analyst)/* — territorios de outras roles ou estados.
+    // - app/index — rota neutra de cold-start, deve ser resolvida ate tabs.
+    // Telas de detalhe legitimas do cliente (vehicle, scheduling, wallet/coupon)
+    // vivem fora de (tabs) por design (sem tab bar) e NAO devem ser interrompidas.
+    // segments=[] na rota raiz (`app/index.tsx`); segments[0] vira undefined
+    // e o cast escapa do union literal estrito gerado pelos typed routes.
+    const firstSegment = segments[0] as string | undefined;
+    const isNeutralIndex = firstSegment === undefined;
+    if (inAuthGroup || inAnalystGroup || isNeutralIndex) {
       router.replace('/(tabs)');
     }
   }, [status, user, userHydrated, onboardingComplete, segments, router]);
