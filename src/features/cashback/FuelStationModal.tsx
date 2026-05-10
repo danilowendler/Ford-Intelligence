@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Dimensions, FlatList, Modal, Pressable, StyleSheet, View } from 'react-native';
+import { FlatList, Modal, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutDown } from 'react-native-reanimated';
 import { Button, GlassPanel, Icon, Text } from '@/components';
@@ -20,9 +20,6 @@ export type FuelStationModalProps = {
 export function FuelStationModal({ couponId, onClose, onRedeemed }: FuelStationModalProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const screenHeight = Dimensions.get('window').height;
-  // Reserva ~12% da viewport para o backdrop tocavel acima do sheet.
-  const maxSheetHeight = Math.round(screenHeight * 0.88);
   const [data, setData] = useState<string | null>(couponId);
   const visible = couponId !== null;
 
@@ -73,13 +70,15 @@ export function FuelStationModal({ couponId, onClose, onRedeemed }: FuelStationM
       statusBarTranslucent
     >
       {data ? (
-        <View style={styles.fill}>
+        <View style={styles.root}>
           {visible ? (
             <>
+              {/* Backdrop ocupa o root inteiro (absoluteFill) e fica atras do
+                  sheet por z-order natural (irmao anterior). */}
               <Animated.View
                 entering={FadeIn.duration(180)}
                 exiting={FadeOut.duration(EXIT_DURATION_MS - 80)}
-                style={[styles.fill, styles.backdrop, { backgroundColor: theme.colors.overlay }]}
+                style={[StyleSheet.absoluteFillObject, { backgroundColor: theme.colors.overlay }]}
               >
                 <Pressable
                   style={styles.fill}
@@ -89,18 +88,20 @@ export function FuelStationModal({ couponId, onClose, onRedeemed }: FuelStationM
                 />
               </Animated.View>
 
+              {/* Sheet: filho NORMAL do root flex-end (sem position absolute).
+                  maxHeight: '85%' resolve porque o root tem altura definida
+                  (= viewport do Modal). */}
               <Animated.View
                 entering={SlideInDown.duration(280)}
                 exiting={SlideOutDown.duration(EXIT_DURATION_MS - 80)}
-                style={[styles.sheetWrapper, { paddingHorizontal: theme.spacing.lg }]}
-                pointerEvents="box-none"
+                style={[styles.sheet, { paddingHorizontal: theme.spacing.lg }]}
               >
                 <GlassPanel
                   padding="none"
                   intensity={theme.blur.modal}
-                  style={{ maxHeight: maxSheetHeight }}
+                  style={styles.glass}
                 >
-                  {/* Header fixo: drag handle + titulo + close + descricao */}
+                  {/* Header (altura intrinseca) */}
                   <View
                     style={{
                       paddingHorizontal: theme.spacing.xl,
@@ -143,11 +144,12 @@ export function FuelStationModal({ couponId, onClose, onRedeemed }: FuelStationM
                     </Text>
                   </View>
 
-                  {/* Lista rolavel — encolhe quando o sheet bate em maxSheetHeight */}
+                  {/* Lista: flex:1 reivindica o espaco restante DENTRO do
+                      maxHeight resolvido do sheet. Rola se ultrapassar. */}
                   <FlatList
                     data={stations}
                     keyExtractor={(s) => s.id}
-                    style={{ flexGrow: 0, flexShrink: 1 }}
+                    style={styles.list}
                     contentContainerStyle={{
                       paddingHorizontal: theme.spacing.xl,
                       paddingBottom: theme.spacing.md,
@@ -216,7 +218,7 @@ export function FuelStationModal({ couponId, onClose, onRedeemed }: FuelStationM
                     }
                   />
 
-                  {/* Footer fixo: respeita home indicator */}
+                  {/* Footer (altura intrinseca) — respeita home indicator */}
                   <View
                     style={{
                       paddingHorizontal: theme.spacing.xl,
@@ -247,13 +249,26 @@ export function FuelStationModal({ couponId, onClose, onRedeemed }: FuelStationM
 }
 
 const styles = StyleSheet.create({
+  // Root: ocupa todo o viewport do Modal e empurra o sheet para baixo.
+  root: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
   fill: { flex: 1 },
-  backdrop: { ...StyleSheet.absoluteFillObject },
-  sheetWrapper: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
+  // Sheet: filho NORMAL (sem position absolute), maxHeight em % do root.
+  sheet: {
+    width: '100%',
+    maxHeight: '85%',
+  },
+  // Glass: container do conteudo, altura definida pelo sheet pai.
+  // overflow:hidden garante que filhos jamais vazem.
+  glass: {
+    flex: 1,
+    overflow: 'hidden',
+  },
+  // List: flex:1 reivindica o espaco restante entre header e footer.
+  list: {
+    flex: 1,
   },
   stationRow: {
     flexDirection: 'row',
