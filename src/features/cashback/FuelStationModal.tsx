@@ -73,8 +73,6 @@ export function FuelStationModal({ couponId, onClose, onRedeemed }: FuelStationM
         <View style={styles.root}>
           {visible ? (
             <>
-              {/* Backdrop ocupa o root inteiro (absoluteFill) e fica atras do
-                  sheet por z-order natural (irmao anterior). */}
               <Animated.View
                 entering={FadeIn.duration(180)}
                 exiting={FadeOut.duration(EXIT_DURATION_MS - 80)}
@@ -88,157 +86,155 @@ export function FuelStationModal({ couponId, onClose, onRedeemed }: FuelStationM
                 />
               </Animated.View>
 
-              {/* Sheet: filho NORMAL do root flex-end (sem position absolute).
-                  maxHeight: '85%' resolve porque o root tem altura definida
-                  (= viewport do Modal). */}
+              {/* Sheet: overflow:hidden is the key — it turns maxHeight:'85%' into
+                  a hard ceiling that Yoga propagates into the FlatList's scroll height. */}
               <Animated.View
                 entering={SlideInDown.duration(280)}
                 exiting={SlideOutDown.duration(EXIT_DURATION_MS - 80)}
-                style={[styles.sheet, { paddingHorizontal: theme.spacing.lg }]}
+                style={[
+                  styles.sheet,
+                  {
+                    marginHorizontal: theme.spacing.lg,
+                    borderRadius: theme.radius.lg,
+                    borderColor: theme.colors.border,
+                  },
+                ]}
               >
+                {/* Glass background decoupled from content flow so it never
+                    contributes to the Yoga height measurement of the sheet. */}
                 <GlassPanel
                   padding="none"
                   intensity={theme.blur.modal}
-                  style={styles.glass}
+                  borderless
+                  style={StyleSheet.absoluteFillObject}
+                />
+
+                {/* Header — intrinsic height */}
+                <View
+                  style={{
+                    paddingHorizontal: theme.spacing.xl,
+                    paddingTop: theme.spacing.xl,
+                    paddingBottom: theme.spacing.md,
+                    gap: theme.spacing.sm,
+                  }}
                 >
-                  {/* Header (altura intrinseca) */}
                   <View
                     style={{
-                      paddingHorizontal: theme.spacing.xl,
-                      paddingTop: theme.spacing.xl,
-                      paddingBottom: theme.spacing.md,
-                      gap: theme.spacing.sm,
+                      alignSelf: 'center',
+                      width: 40,
+                      height: 4,
+                      borderRadius: theme.radius.full,
+                      backgroundColor: theme.colors.borderStrong,
+                      marginBottom: theme.spacing.xs,
                     }}
-                  >
-                    <View
+                  />
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Text variant="h2">Selecionar posto</Text>
+                    <Pressable
+                      onPress={onClose}
+                      hitSlop={12}
+                      accessibilityRole="button"
+                      accessibilityLabel="Fechar"
                       style={{
-                        alignSelf: 'center',
-                        width: 40,
-                        height: 4,
-                        borderRadius: theme.radius.full,
-                        backgroundColor: theme.colors.borderStrong,
-                        marginBottom: theme.spacing.xs,
+                        width: theme.touchTarget.min,
+                        height: theme.touchTarget.min,
+                        alignItems: 'center',
+                        justifyContent: 'center',
                       }}
-                    />
-
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <Text variant="h2">Selecionar posto</Text>
-                      <Pressable
-                        onPress={onClose}
-                        hitSlop={12}
-                        accessibilityRole="button"
-                        accessibilityLabel="Fechar"
-                        style={{
-                          width: theme.touchTarget.min,
-                          height: theme.touchTarget.min,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <Icon name="close" size={22} color="muted" />
-                      </Pressable>
-                    </View>
-
-                    <Text variant="body" color="muted">
-                      Escolha onde quer usar seu cashback em combustível.
-                    </Text>
+                    >
+                      <Icon name="close" size={22} color="muted" />
+                    </Pressable>
                   </View>
+                  <Text variant="body" color="muted">
+                    Escolha onde quer usar seu cashback em combustível.
+                  </Text>
+                </View>
 
-                  {/* Lista: flex:1 reivindica o espaco restante DENTRO do
-                      maxHeight resolvido do sheet. Rola se ultrapassar. */}
-                  <FlatList
-                    data={stations}
-                    keyExtractor={(s) => s.id}
-                    style={styles.list}
-                    contentContainerStyle={{
-                      paddingHorizontal: theme.spacing.xl,
-                      paddingBottom: theme.spacing.md,
-                    }}
-                    showsVerticalScrollIndicator={false}
-                    renderItem={({ item }) => {
-                      const selected = item.id === selectedId;
-                      return (
-                        <Pressable
-                          onPress={() => setSelectedId(item.id)}
+                {/* Station list — flexGrow:0 tells Yoga to size the list from its
+                    content, not from the parent. When that content hits the sheet's
+                    overflow:hidden ceiling, the native ScrollView inside FlatList
+                    activates automatically. */}
+                <FlatList
+                  data={stations}
+                  keyExtractor={(s) => s.id}
+                  style={styles.list}
+                  contentContainerStyle={{
+                    paddingHorizontal: theme.spacing.xl,
+                    paddingBottom: theme.spacing.md,
+                  }}
+                  showsVerticalScrollIndicator={false}
+                  renderItem={({ item }) => {
+                    const selected = item.id === selectedId;
+                    return (
+                      <Pressable
+                        onPress={() => setSelectedId(item.id)}
+                        style={[
+                          styles.stationRow,
+                          {
+                            borderColor: selected ? theme.plan.accent : theme.colors.border,
+                            borderRadius: theme.radius.md,
+                            padding: theme.spacing.md,
+                            marginBottom: theme.spacing.sm,
+                          },
+                        ]}
+                        accessibilityRole="radio"
+                        accessibilityState={{ checked: selected }}
+                      >
+                        <View
                           style={[
-                            styles.stationRow,
+                            styles.radio,
                             {
-                              borderColor: selected
-                                ? theme.plan.accent
-                                : theme.colors.border,
-                              borderRadius: theme.radius.md,
-                              padding: theme.spacing.md,
-                              marginBottom: theme.spacing.sm,
+                              borderColor: selected ? theme.plan.accent : theme.colors.borderStrong,
+                              backgroundColor: selected ? theme.plan.accent : 'transparent',
                             },
                           ]}
-                          accessibilityRole="radio"
-                          accessibilityState={{ checked: selected }}
                         >
-                          <View
-                            style={[
-                              styles.radio,
-                              {
-                                borderColor: selected
-                                  ? theme.plan.accent
-                                  : theme.colors.borderStrong,
-                                backgroundColor: selected ? theme.plan.accent : 'transparent',
-                              },
-                            ]}
-                          >
-                            {selected ? (
-                              <View
-                                style={{
-                                  width: 8,
-                                  height: 8,
-                                  borderRadius: 4,
-                                  backgroundColor: '#FFF',
-                                }}
-                              />
-                            ) : null}
-                          </View>
-                          <View style={{ flex: 1 }}>
-                            <Text variant="bodyStrong">{item.name}</Text>
-                            <Text variant="caption" color="muted" numberOfLines={1}>
-                              {item.address}
+                          {selected ? (
+                            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#FFF' }} />
+                          ) : null}
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text variant="bodyStrong">{item.name}</Text>
+                          <Text variant="caption" color="muted" numberOfLines={1}>
+                            {item.address}
+                          </Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                            <Icon name="location-outline" size={12} color="muted" />
+                            <Text variant="caption" color="muted">
+                              {item.distanceKm.toFixed(1)} km
                             </Text>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                              <Icon name="location-outline" size={12} color="muted" />
-                              <Text variant="caption" color="muted">
-                                {item.distanceKm.toFixed(1)} km
-                              </Text>
-                            </View>
                           </View>
-                        </Pressable>
-                      );
-                    }}
-                    ListEmptyComponent={
-                      <Text variant="body" color="muted" style={{ textAlign: 'center', paddingVertical: 16 }}>
-                        Carregando postos...
-                      </Text>
-                    }
-                  />
+                        </View>
+                      </Pressable>
+                    );
+                  }}
+                  ListEmptyComponent={
+                    <Text variant="body" color="muted" style={{ textAlign: 'center', paddingVertical: 16 }}>
+                      Carregando postos...
+                    </Text>
+                  }
+                />
 
-                  {/* Footer (altura intrinseca) — respeita home indicator */}
-                  <View
-                    style={{
-                      paddingHorizontal: theme.spacing.xl,
-                      paddingTop: theme.spacing.md,
-                      paddingBottom: Math.max(insets.bottom, theme.spacing.lg),
-                      gap: theme.spacing.sm,
-                      borderTopWidth: StyleSheet.hairlineWidth,
-                      borderTopColor: theme.colors.border,
-                    }}
-                  >
-                    <Button
-                      label="Confirmar resgate"
-                      disabled={!selectedId || submitting}
-                      loading={submitting}
-                      onPress={handleConfirm}
-                      fullWidth
-                    />
-                    <Button label="Cancelar" variant="ghost" onPress={onClose} disabled={submitting} fullWidth />
-                  </View>
-                </GlassPanel>
+                {/* Footer — intrinsic height, always pinned below the list */}
+                <View
+                  style={{
+                    paddingHorizontal: theme.spacing.xl,
+                    paddingTop: theme.spacing.md,
+                    paddingBottom: Math.max(insets.bottom, theme.spacing.lg),
+                    gap: theme.spacing.sm,
+                    borderTopWidth: StyleSheet.hairlineWidth,
+                    borderTopColor: theme.colors.border,
+                  }}
+                >
+                  <Button
+                    label="Confirmar resgate"
+                    disabled={!selectedId || submitting}
+                    loading={submitting}
+                    onPress={handleConfirm}
+                    fullWidth
+                  />
+                  <Button label="Cancelar" variant="ghost" onPress={onClose} disabled={submitting} fullWidth />
+                </View>
               </Animated.View>
             </>
           ) : null}
@@ -249,28 +245,21 @@ export function FuelStationModal({ couponId, onClose, onRedeemed }: FuelStationM
 }
 
 const styles = StyleSheet.create({
-  // Root: ocupa todo o viewport do Modal e empurra o sheet para baixo.
   root: {
     flex: 1,
     justifyContent: 'flex-end',
   },
   fill: { flex: 1 },
-  // Sheet: filho NORMAL (sem position absolute), maxHeight em % do root.
   sheet: {
-    width: '100%',
     maxHeight: '85%',
-  },
-  // Glass: container do conteudo. Sem flex:1 — abraca o conteudo
-  // naturalmente. O sheet pai impoe maxHeight 85%, e o overflow:hidden
-  // garante que filhos jamais vazem do raio do GlassPanel.
-  glass: {
-    flexShrink: 1,
     overflow: 'hidden',
+    borderWidth: 1,
   },
-  // List: flexShrink:1 — cresce com o conteudo intrinseco, mas encolhe
-  // (e ativa scroll) quando o sheet bate no maxHeight de 85%.
+  // flexGrow:0 is the only flex property needed on the list.
+  // It prevents the FlatList from claiming extra space, so the sheet's
+  // overflow:hidden boundary becomes the natural scroll activation point.
   list: {
-    flexShrink: 1,
+    flexGrow: 0,
   },
   stationRow: {
     flexDirection: 'row',
