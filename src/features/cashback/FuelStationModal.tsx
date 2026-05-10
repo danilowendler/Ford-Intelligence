@@ -6,6 +6,7 @@ import { useTheme } from '@/theme/ThemeProvider';
 import { useWalletStore } from '@/stores/useWalletStore';
 import { fetchFuelStations } from '@/services/mocks/walletApi';
 import type { FuelStation } from './types';
+import { haptic } from '@/utils/haptics';
 
 const EXIT_DURATION_MS = 280;
 
@@ -50,6 +51,7 @@ export function FuelStationModal({ couponId, onClose, onRedeemed }: FuelStationM
     setSubmitting(true);
     try {
       await redeemCoupon(data, selectedId);
+      haptic.success();
       onRedeemed();
       onClose();
     } catch {

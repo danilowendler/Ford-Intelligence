@@ -6,6 +6,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { Badge, GlassPanel, Icon, Text } from '@/components';
 import { Vehicle3DSkeleton } from '@/components/Vehicle3DSkeleton';
 import { useTheme } from '@/theme/ThemeProvider';
+import { haptic } from '@/utils/haptics';
 import { useUserStore, type VehicleModel } from '@/stores/useUserStore';
 import { useAlertsStore } from '@/stores/useAlertsStore';
 import { useTelemetry } from '@/features/telemetry/useTelemetry';
@@ -71,7 +72,10 @@ export default function VehicleDetailScreen() {
   const handleHotspotPress = useCallback(
     (category: HotspotCategory) => {
       const match = hotspots.find((h) => h.category === category);
-      if (match) setSelected(match);
+      if (match) {
+        haptic.selection();
+        setSelected(match);
+      }
     },
     [hotspots],
   );

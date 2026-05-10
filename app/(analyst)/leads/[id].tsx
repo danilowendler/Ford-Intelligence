@@ -8,6 +8,7 @@ import { fetchLeadById, type LeadDetail } from '@/services/mocks/analystApi';
 import { VEHICLE_LABEL, PLAN_LABEL, STATUS_LABEL, STATUS_TONE, RISK_TONE } from '@/features/analyst-dashboard/leadDisplayMaps';
 import { SkeletonBlock } from '@/features/analyst-dashboard/SkeletonBlock';
 import { formatDate } from '@/utils/date';
+import { haptic } from '@/utils/haptics';
 
 export default function LeadDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -45,7 +46,10 @@ export default function LeadDetailScreen() {
         { text: 'Cancelar', style: 'cancel' },
         {
           text: 'Confirmar',
-          onPress: () => setActionStatus('contactado'),
+          onPress: () => {
+            haptic.light();
+            setActionStatus('contactado');
+          },
         },
       ],
     );
@@ -60,6 +64,7 @@ export default function LeadDetailScreen() {
         {
           text: 'Converter',
           onPress: () => {
+            haptic.success();
             setActionStatus('convertido');
             Alert.alert('Lead convertido!', 'O agendamento foi registrado com sucesso.');
           },

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { Alert } from '@/services/mocks/alertsApi';
+import { haptic } from '@/utils/haptics';
 
 type AlertsState = {
   alerts: Alert[];
@@ -46,6 +47,16 @@ export const useAlertsStore = create<AlertsState>((set, get) => ({
     const alertsChanged = !shallowEqualAlerts(merged, state.alerts);
     const dismissedChanged = dismissedKeys.length !== state.dismissedKeys.length;
     if (!alertsChanged && !dismissedChanged) return;
+
+    if (alertsChanged) {
+      const prevCriticalIds = new Set(
+        state.alerts.filter((a) => a.severity === 'critical').map((a) => a.id),
+      );
+      const hasNewCritical = merged.some(
+        (a) => a.severity === 'critical' && !prevCriticalIds.has(a.id),
+      );
+      if (hasNewCritical) haptic.warning();
+    }
 
     set({
       alerts: alertsChanged ? merged : state.alerts,
