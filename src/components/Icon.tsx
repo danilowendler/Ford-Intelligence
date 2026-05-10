@@ -17,9 +17,15 @@ export type IconProps = {
   name: IconName;
   size?: number;
   color?: IconColor;
+  /**
+   * Quando o icone tem significado proprio (nao apenas decorativo), passar
+   * label para que o leitor de tela anuncie. Ex.: icone-only buttons.
+   * Por padrao, icones sao tratados como decorativos e ignorados pelo leitor.
+   */
+  accessibilityLabel?: string;
 };
 
-export function Icon({ name, size = 20, color = 'primary' }: IconProps) {
+export function Icon({ name, size = 20, color = 'primary', accessibilityLabel }: IconProps) {
   const theme = useTheme();
   const map: Record<IconColor, string> = {
     primary: theme.colors.textPrimary,
@@ -30,5 +36,15 @@ export function Icon({ name, size = 20, color = 'primary' }: IconProps) {
     success: theme.colors.success,
     inverse: theme.plan.accentContrast,
   };
-  return <Ionicons name={name} size={size} color={map[color]} />;
+  const decorative = !accessibilityLabel;
+  return (
+    <Ionicons
+      name={name}
+      size={size}
+      color={map[color]}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityElementsHidden={decorative}
+      importantForAccessibility={decorative ? 'no-hide-descendants' : 'yes'}
+    />
+  );
 }
