@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { FlatList, Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Dimensions, FlatList, Modal, Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutDown } from 'react-native-reanimated';
 import { Button, GlassPanel, Icon, Text } from '@/components';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -18,6 +19,10 @@ export type FuelStationModalProps = {
 
 export function FuelStationModal({ couponId, onClose, onRedeemed }: FuelStationModalProps) {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const screenHeight = Dimensions.get('window').height;
+  // Reserva ~12% da viewport para o backdrop tocavel acima do sheet.
+  const maxSheetHeight = Math.round(screenHeight * 0.88);
   const [data, setData] = useState<string | null>(couponId);
   const visible = couponId !== null;
 
@@ -91,48 +96,63 @@ export function FuelStationModal({ couponId, onClose, onRedeemed }: FuelStationM
                 pointerEvents="box-none"
               >
                 <GlassPanel
-                  padding="xl"
+                  padding="none"
                   intensity={theme.blur.modal}
-                  style={{ gap: theme.spacing.md }}
+                  style={{ maxHeight: maxSheetHeight }}
                 >
-                  {/* Drag handle */}
+                  {/* Header fixo: drag handle + titulo + close + descricao */}
                   <View
                     style={{
-                      alignSelf: 'center',
-                      width: 40,
-                      height: 4,
-                      borderRadius: theme.radius.full,
-                      backgroundColor: theme.colors.borderStrong,
-                      marginBottom: theme.spacing.xs,
+                      paddingHorizontal: theme.spacing.xl,
+                      paddingTop: theme.spacing.xl,
+                      paddingBottom: theme.spacing.md,
+                      gap: theme.spacing.sm,
                     }}
-                  />
-
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Text variant="h2">Selecionar posto</Text>
-                    <Pressable
-                      onPress={onClose}
-                      hitSlop={12}
-                      accessibilityRole="button"
-                      accessibilityLabel="Fechar"
+                  >
+                    <View
                       style={{
-                        width: theme.touchTarget.min,
-                        height: theme.touchTarget.min,
-                        alignItems: 'center',
-                        justifyContent: 'center',
+                        alignSelf: 'center',
+                        width: 40,
+                        height: 4,
+                        borderRadius: theme.radius.full,
+                        backgroundColor: theme.colors.borderStrong,
+                        marginBottom: theme.spacing.xs,
                       }}
-                    >
-                      <Icon name="close" size={22} color="muted" />
-                    </Pressable>
+                    />
+
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <Text variant="h2">Selecionar posto</Text>
+                      <Pressable
+                        onPress={onClose}
+                        hitSlop={12}
+                        accessibilityRole="button"
+                        accessibilityLabel="Fechar"
+                        style={{
+                          width: theme.touchTarget.min,
+                          height: theme.touchTarget.min,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Icon name="close" size={22} color="muted" />
+                      </Pressable>
+                    </View>
+
+                    <Text variant="body" color="muted">
+                      Escolha onde quer usar seu cashback em combustível.
+                    </Text>
                   </View>
 
-                  <Text variant="body" color="muted">
-                    Escolha onde quer usar seu cashback em combustível.
-                  </Text>
-
+                  {/* Lista rolavel — encolhe quando o sheet bate em maxSheetHeight */}
                   <FlatList
                     data={stations}
                     keyExtractor={(s) => s.id}
-                    scrollEnabled={false}
+                    style={{ flexGrow: 0, flexShrink: 1 }}
+                    contentContainerStyle={{
+                      paddingHorizontal: theme.spacing.xl,
+                      paddingBottom: theme.spacing.md,
+                    }}
+                    showsVerticalScrollIndicator={false}
                     renderItem={({ item }) => {
                       const selected = item.id === selectedId;
                       return (
@@ -196,7 +216,17 @@ export function FuelStationModal({ couponId, onClose, onRedeemed }: FuelStationM
                     }
                   />
 
-                  <View style={{ gap: theme.spacing.sm }}>
+                  {/* Footer fixo: respeita home indicator */}
+                  <View
+                    style={{
+                      paddingHorizontal: theme.spacing.xl,
+                      paddingTop: theme.spacing.md,
+                      paddingBottom: Math.max(insets.bottom, theme.spacing.lg),
+                      gap: theme.spacing.sm,
+                      borderTopWidth: StyleSheet.hairlineWidth,
+                      borderTopColor: theme.colors.border,
+                    }}
+                  >
                     <Button
                       label="Confirmar resgate"
                       disabled={!selectedId || submitting}
@@ -224,7 +254,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    paddingBottom: 40,
   },
   stationRow: {
     flexDirection: 'row',
