@@ -1,12 +1,11 @@
-import { useEffect } from 'react';
 import { StyleSheet, View, type DimensionValue, type ViewStyle } from 'react-native';
 import Animated, {
   Easing,
-  cancelAnimation,
+  makeMutable,
   useAnimatedStyle,
-  useSharedValue,
   withRepeat,
   withTiming,
+  type SharedValue,
 } from 'react-native-reanimated';
 import { useTheme } from '@/theme/ThemeProvider';
 
@@ -21,22 +20,35 @@ type BlockProps = SharedProps & {
   radius?: number;
 };
 
-function useShimmerOpacity(enabled: boolean) {
-  const opacity = useSharedValue(0.55);
+// Shared driver: 1 unico worklet para todo o app, independente de quantos
+// skeletons estao montados simultaneamente. Todos pulsam em sincronia
+// (visualmente coeso) e a UI thread nao satura mesmo em listas grandes.
+let sharedShimmer: SharedValue<number> | null = null;
 
-  useEffect(() => {
-    if (!enabled) return;
-    opacity.value = withRepeat(
+function getShimmerDriver(): SharedValue<number> {
+  if (!sharedShimmer) {
+    const sv = makeMutable(0.55);
+    sv.value = withRepeat(
       withTiming(1, { duration: 900, easing: Easing.inOut(Easing.quad) }),
       -1,
       true,
     );
-    return () => {
-      cancelAnimation(opacity);
-    };
-  }, [enabled, opacity]);
+    sharedShimmer = sv;
+  }
+  return sharedShimmer;
+}
 
-  return useAnimatedStyle(() => ({ opacity: opacity.value }));
+// Constante para o caso `shimmer={false}` — evita criar novo SharedValue
+// por skeleton estatico.
+let staticOpacity: SharedValue<number> | null = null;
+function getStaticOpacity(): SharedValue<number> {
+  if (!staticOpacity) staticOpacity = makeMutable(0.55);
+  return staticOpacity;
+}
+
+function useShimmerStyle(enabled: boolean) {
+  const driver = enabled ? getShimmerDriver() : getStaticOpacity();
+  return useAnimatedStyle(() => ({ opacity: driver.value }));
 }
 
 function SkeletonBase({
@@ -45,7 +57,7 @@ function SkeletonBase({
   children,
 }: SharedProps & { children?: React.ReactNode }) {
   const theme = useTheme();
-  const animated = useShimmerOpacity(shimmer);
+  const animated = useShimmerStyle(shimmer);
   return (
     <Animated.View
       accessibilityElementsHidden

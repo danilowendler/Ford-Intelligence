@@ -331,7 +331,7 @@ Plano operacional dividido em milestones incrementais. Cada milestone tem **bran
 - [x] Remoção de `moti` (instalado mas não usado) + placeholders `react-logo*.png`
 - [x] `README.md` reescrito para handover M11: stack atualizada, smoke test em 12 itens, troubleshooting (Reanimated worklets, Metro web stub, fontes, splash, regen ícones), personas, roadmap
 
-**Status:** ✅ Concluído — branch `feat/m10-polish-qa` (8 commits temáticos)
+**Status:** ✅ Concluído — branch `feat/m10-polish-qa` (8 commits temáticos + 1 audit fix)
 
 **Ordem de commits:**
 1. `chore(m10): remove moti unused dep + react-logo placeholders`
@@ -342,6 +342,12 @@ Plano operacional dividido em milestones incrementais. Cada milestone tem **bran
 6. `feat(m10/haptics): feedback tatil em acoes criticas`
 7. `chore(m10/assets): icone e splash Ford-blue + runtimeVersion`
 8. `docs(m10): README handover + PLAN.md marca M10 concluido`
+9. `chore(m10): audit fixes (zustand purity, shared shimmer driver, prod error logs)`
+
+**Auditoria pós-implementação (Staff Review — 3 patches aplicados antes do merge):**
+- 🔴 **A1**: `haptic.warning()` disparava dentro de `syncFromEvaluation` (action Zustand) — quebrava pureza do reducer e podia vibrar duplo em Strict Mode/concurrent rendering. Movido para `src/stores/criticalAlertHapticListener.ts` (subscribe singleton fora da árvore React), instanciado uma vez em `app/_layout.tsx`. Bootstrap guard evita falso positivo na primeira sync após hidratação.
+- 🟡 **A2**: `Skeleton` criava 1 `useSharedValue + withRepeat` por instância — N skeletons = N worklets infinitos rodando na UI thread, com risco de jank em listas grandes em devices low-end. Refatorado para **shared driver**: `getShimmerDriver()` retorna 1 `SharedValue` singleton via `makeMutable`, todos os skeletons leem o mesmo driver e pulsam em sincronia. `useEffect`/`cancelAnimation` removidos (driver nunca é cancelado, vive enquanto o app vive).
+- 🔴 **A3**: `RootErrorBoundary.componentDidCatch` só logava em `__DEV__` — builds EAS de preview ficariam com crashes silenciosos. Removido o guard, `console.error` agora roda também em prod (preparando integração com Sentry no M11). Adicionado comentário de invariante em `MapCanvas.tsx` declarando que call sites do `mapRef` devem usar optional chaining (gap de 1 frame entre Suspense fallback e chunk resolve).
 
 ---
 

@@ -10,6 +10,12 @@ import { darkMapStyle } from '@/features/scheduling/mapStyle';
 import { DealerPin } from '@/features/scheduling/DealerPin';
 import type { Dealer } from '@/types/scheduling';
 
+// INVARIANTE: este componente e carregado por React.lazy em app/(tabs)/map.tsx.
+// Existe um gap de ~1 frame entre o Suspense fallback e o resolve do chunk
+// onde mapRef.current === null. Todos os call sites de mapRef devem usar
+// optional chaining (`mapRef.current?.animateToRegion(...)`) — nunca acesso
+// direto. Quebrar essa invariante causa NPE no primeiro toque pos-cold-start.
+
 export type MapCanvasProps = {
   initialRegion: Region;
   dealers: Dealer[];

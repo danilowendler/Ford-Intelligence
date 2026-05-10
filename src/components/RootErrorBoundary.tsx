@@ -20,9 +20,10 @@ export class RootErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    if (__DEV__) {
-      console.error('[RootErrorBoundary]', error, info.componentStack);
-    }
+    // Log mantido em prod tambem: builds EAS de preview vao para stakeholders
+    // e crashes silenciosos sao impossiveis de diagnosticar. Quando o M11
+    // integrar telemetria de erros (ex.: Sentry), enviar daqui.
+    console.error('[RootErrorBoundary]', error, info.componentStack);
   }
 
   reset = () => {

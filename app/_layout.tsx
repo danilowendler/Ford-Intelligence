@@ -19,6 +19,7 @@ import { useUserStore } from '@/stores/useUserStore';
 import { usePlanStore } from '@/stores/usePlanStore';
 import { useSchedulingStore } from '@/stores/useSchedulingStore';
 import { useWalletStore } from '@/stores/useWalletStore';
+import { startCriticalAlertHapticListener } from '@/stores/criticalAlertHapticListener';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import 'react-native-reanimated';
 
@@ -84,6 +85,8 @@ export default function RootLayout() {
       setPlan(userProfile.plan);
     }
   }, [userProfile?.plan, setPlan]);
+
+  useEffect(() => startCriticalAlertHapticListener(), []);
 
   useEffect(() => {
     const authReady = status === 'authenticated' || status === 'unauthenticated';
