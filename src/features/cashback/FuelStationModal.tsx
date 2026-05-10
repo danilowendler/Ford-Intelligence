@@ -260,15 +260,16 @@ const styles = StyleSheet.create({
     width: '100%',
     maxHeight: '85%',
   },
-  // Glass: container do conteudo, altura definida pelo sheet pai.
-  // overflow:hidden garante que filhos jamais vazem.
+  // Glass: container do conteudo. Sem flex:1 — abraca o conteudo
+  // naturalmente. O sheet pai impoe maxHeight 85%, e o overflow:hidden
+  // garante que filhos jamais vazem do raio do GlassPanel.
   glass: {
-    flex: 1,
     overflow: 'hidden',
   },
-  // List: flex:1 reivindica o espaco restante entre header e footer.
+  // List: flexShrink:1 — cresce com o conteudo intrinseco, mas encolhe
+  // (e ativa scroll) quando o sheet bate no maxHeight de 85%.
   list: {
-    flex: 1,
+    flexShrink: 1,
   },
   stationRow: {
     flexDirection: 'row',
