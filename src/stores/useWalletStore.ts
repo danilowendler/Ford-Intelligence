@@ -13,6 +13,7 @@ type WalletState = {
   transactions: Transaction[];
   coupons: Coupon[];
   loading: boolean;
+  error: string | null;
   celebrateVisible: boolean;
   hydrate: () => Promise<void>;
   fetchWallet: () => Promise<void>;
@@ -27,6 +28,7 @@ export const useWalletStore = create<WalletState>((set, get) => ({
   transactions: [],
   coupons: [],
   loading: false,
+  error: null,
   celebrateVisible: false,
 
   hydrate: async () => {
@@ -49,7 +51,7 @@ export const useWalletStore = create<WalletState>((set, get) => ({
   },
 
   fetchWallet: async () => {
-    set({ loading: true });
+    set({ loading: true, error: null });
     try {
       const data = await fetchWallet();
       await Promise.all([
@@ -57,6 +59,8 @@ export const useWalletStore = create<WalletState>((set, get) => ({
         AsyncStorage.setItem(TRANSACTIONS_KEY, JSON.stringify(data.transactions)),
       ]);
       set({ balance: data.balance, transactions: data.transactions });
+    } catch {
+      set({ error: 'Não foi possível carregar sua carteira.' });
     } finally {
       set({ loading: false });
     }

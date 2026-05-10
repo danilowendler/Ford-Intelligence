@@ -11,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Button, Icon, Screen, Text } from '@/components';
 import { useTheme } from '@/theme/ThemeProvider';
+import { haptic } from '@/utils/haptics';
 
 export default function SchedulingSuccessStep() {
   const theme = useTheme();
@@ -22,6 +23,7 @@ export default function SchedulingSuccessStep() {
   const opacity = useSharedValue(0);
 
   useEffect(() => {
+    haptic.success();
     scale.value = withSequence(
       withTiming(1.15, { duration: 280 }),
       withSpring(1, { damping: 10 }),

@@ -1,18 +1,20 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE, type MapPressEvent, type Region } from 'react-native-maps';
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import type MapView from 'react-native-maps';
+import type { MapPressEvent, Region } from 'react-native-maps';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { GlassPanel, Text } from '@/components';
+import { MapSkeleton } from '@/components/MapSkeleton';
 import { useTheme } from '@/theme/ThemeProvider';
 import { DEFAULT_ORIGIN, fetchDealers } from '@/services/mocks/dealersApi';
 import type { Dealer } from '@/types/scheduling';
-import { darkMapStyle } from '@/features/scheduling/mapStyle';
-import { DealerPin } from '@/features/scheduling/DealerPin';
 import { DealerSheet } from '@/features/scheduling/DealerSheet';
 import { MapFiltersBar, type MapFilterId } from '@/features/scheduling/MapFiltersBar';
 import { useSchedulingStore } from '@/stores/useSchedulingStore';
+
+const MapCanvas = lazy(() => import('@/features/scheduling/MapCanvas'));
 
 const INITIAL_REGION: Region = {
   latitude: DEFAULT_ORIGIN.latitude,
@@ -127,36 +129,19 @@ export default function MapScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: theme.colors.bgBase }]}>
-      <MapView
-        ref={(ref) => {
-          mapRef.current = ref;
-        }}
-        provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
-        style={StyleSheet.absoluteFill}
-        initialRegion={INITIAL_REGION}
-        customMapStyle={darkMapStyle}
-        showsCompass={false}
-        showsPointsOfInterest={false}
-        showsBuildings={false}
-        toolbarEnabled={false}
-        mapPadding={mapPadding}
-        onPress={handleMapPress}
-      >
-        {visibleDealers.map((dealer) => (
-          <Marker
-            key={dealer.id}
-            coordinate={dealer.coords}
-            onPress={() => handleSelect(dealer)}
-            anchor={{ x: 0.5, y: 0.5 }}
-            tracksViewChanges={initialTracking || trackingId === dealer.id}
-          >
-            <DealerPin
-              selected={selectedId === dealer.id}
-              hasPromotion={dealer.promotions.length > 0}
-            />
-          </Marker>
-        ))}
-      </MapView>
+      <Suspense fallback={<MapSkeleton />}>
+        <MapCanvas
+          ref={mapRef}
+          initialRegion={INITIAL_REGION}
+          dealers={visibleDealers}
+          selectedId={selectedId}
+          trackingId={trackingId}
+          initialTracking={initialTracking}
+          mapPadding={mapPadding}
+          onMarkerPress={handleSelect}
+          onPress={handleMapPress}
+        />
+      </Suspense>
 
       <View
         pointerEvents="box-none"
@@ -204,12 +189,6 @@ export default function MapScreen() {
         </View>
       </View>
 
-      {loading ? (
-        <View pointerEvents="none" style={styles.loader}>
-          <ActivityIndicator color={theme.plan.accent} />
-        </View>
-      ) : null}
-
       <DealerSheet
         dealer={selectedDealer}
         onClose={() => setSelectedId(null)}
@@ -228,14 +207,5 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-  },
-  loader: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });

@@ -1,16 +1,19 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Badge, GlassPanel, Icon, Text } from '@/components';
+import { Vehicle3DSkeleton } from '@/components/Vehicle3DSkeleton';
 import { useTheme } from '@/theme/ThemeProvider';
+import { haptic } from '@/utils/haptics';
 import { useUserStore, type VehicleModel } from '@/stores/useUserStore';
 import { useAlertsStore } from '@/stores/useAlertsStore';
 import { useTelemetry } from '@/features/telemetry/useTelemetry';
 import { evaluateAlerts } from '@/services/mocks/alertsApi';
-import { Scene } from '@/features/vehicle3d/Scene';
 import { AlertSheet } from '@/features/vehicle3d/AlertSheet';
+
+const Scene = lazy(() => import('@/features/vehicle3d/SceneLazyEntry'));
 import {
   activeHotspotsCount,
   deriveHotspots,
@@ -69,7 +72,10 @@ export default function VehicleDetailScreen() {
   const handleHotspotPress = useCallback(
     (category: HotspotCategory) => {
       const match = hotspots.find((h) => h.category === category);
-      if (match) setSelected(match);
+      if (match) {
+        haptic.selection();
+        setSelected(match);
+      }
     },
     [hotspots],
   );
@@ -100,28 +106,18 @@ export default function VehicleDetailScreen() {
 
       <View style={styles.canvasLayer}>
         {ready ? (
-          <Animated.View entering={FadeIn.duration(260)} style={styles.fill}>
-            <Scene
-              hotspots={hotspots}
-              presetId={presetId}
-              onHotspotPress={handleHotspotPress}
-              onPresetReached={handlePresetReached}
-            />
-          </Animated.View>
+          <Suspense fallback={<Vehicle3DSkeleton />}>
+            <Animated.View entering={FadeIn.duration(260)} style={styles.fill}>
+              <Scene
+                hotspots={hotspots}
+                presetId={presetId}
+                onHotspotPress={handleHotspotPress}
+                onPresetReached={handlePresetReached}
+              />
+            </Animated.View>
+          </Suspense>
         ) : (
-          <View style={[styles.fill, styles.skeleton]}>
-            <View
-              style={{
-                gap: theme.spacing.sm,
-                alignItems: 'center',
-              }}
-            >
-              <Icon name="cube-outline" size={36} color="muted" />
-              <Text variant="caption" color="muted">
-                Carregando modelo 3D…
-              </Text>
-            </View>
-          </View>
+          <Vehicle3DSkeleton />
         )}
       </View>
 
@@ -243,10 +239,6 @@ const styles = StyleSheet.create({
   },
   canvasLayer: {
     ...StyleSheet.absoluteFillObject,
-  },
-  skeleton: {
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   topOverlay: {
     position: 'absolute',

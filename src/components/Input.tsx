@@ -63,6 +63,9 @@ export function Input<T extends FieldValues>({
             selectionColor={theme.plan.accent}
             cursorColor={theme.plan.accent}
             accessibilityLabel={label}
+            accessibilityHint={hint}
+            accessibilityState={{ disabled: rest.editable === false }}
+            aria-invalid={!!error}
             style={[
               {
                 minHeight: theme.touchTarget.comfortable,

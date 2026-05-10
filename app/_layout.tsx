@@ -12,12 +12,14 @@ import {
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemeProvider } from '@/theme/ThemeProvider';
+import { RootErrorBoundary } from '@/components/RootErrorBoundary';
 import { PlanSwitchPulse } from '@/features/plan-gates/PlanSwitchPulse';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useUserStore } from '@/stores/useUserStore';
 import { usePlanStore } from '@/stores/usePlanStore';
 import { useSchedulingStore } from '@/stores/useSchedulingStore';
 import { useWalletStore } from '@/stores/useWalletStore';
+import { startCriticalAlertHapticListener } from '@/stores/criticalAlertHapticListener';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import 'react-native-reanimated';
 
@@ -84,6 +86,8 @@ export default function RootLayout() {
     }
   }, [userProfile?.plan, setPlan]);
 
+  useEffect(() => startCriticalAlertHapticListener(), []);
+
   useEffect(() => {
     const authReady = status === 'authenticated' || status === 'unauthenticated';
     if (!hydrated && authReady && userHydrated && schedulingHydrated && walletHydrated) {
@@ -107,8 +111,10 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <ThemeProvider>
-          <RootNavigator />
-          <PlanSwitchPulse />
+          <RootErrorBoundary>
+            <RootNavigator />
+            <PlanSwitchPulse />
+          </RootErrorBoundary>
           <StatusBar style="light" />
         </ThemeProvider>
       </SafeAreaProvider>

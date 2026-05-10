@@ -10,6 +10,7 @@ import { useSchedulingStore } from '@/stores/useSchedulingStore';
 import { BookingListItem } from '@/features/scheduling/BookingListItem';
 import { planAccents, planIds, type PlanId } from '@/theme/plans';
 import type { Booking } from '@/types/scheduling';
+import { haptic } from '@/utils/haptics';
 
 export default function ProfileScreen() {
   const theme = useTheme();
@@ -75,7 +76,10 @@ export default function ProfileScreen() {
     const message = `Cancelar agendamento ${booking.protocol}?`;
     if (Platform.OS === 'web') {
       const ok = typeof window !== 'undefined' && window.confirm(message);
-      if (ok) cancelBooking(booking.id);
+      if (ok) {
+        haptic.medium();
+        cancelBooking(booking.id);
+      }
       return;
     }
     Alert.alert('Cancelar agendamento', message, [
@@ -84,6 +88,7 @@ export default function ProfileScreen() {
         text: 'Cancelar agendamento',
         style: 'destructive',
         onPress: () => {
+          haptic.medium();
           cancelBooking(booking.id);
         },
       },

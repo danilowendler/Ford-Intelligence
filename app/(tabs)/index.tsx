@@ -31,6 +31,7 @@ import { SmartRouteCard } from '@/features/plan-gates/SmartRouteCard';
 import { OneTapSchedulingButton } from '@/features/plan-gates/OneTapSchedulingButton';
 import { PlanAccentHaze } from '@/features/plan-gates/PlanAccentHaze';
 import { VoiceCommandFab } from '@/features/plan-gates/VoiceCommandFab';
+import { haptic } from '@/utils/haptics';
 
 const VEHICLE_LABELS: Record<VehicleModel, string> = {
   ranger: 'Ford Ranger',
@@ -84,6 +85,7 @@ export default function HomeScreen() {
   }, [reading, prediction]);
 
   const onRefresh = useCallback(async () => {
+    haptic.light();
     setRefreshing(true);
     clearDismissed();
     restartTelemetry();

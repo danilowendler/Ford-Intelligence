@@ -119,9 +119,10 @@ export function Button({
   return (
     <AnimatedPressable
       accessibilityRole="button"
+      accessibilityLabel={rest.accessibilityLabel ?? label}
       accessibilityState={{ disabled: isDisabled, busy: loading }}
       disabled={isDisabled}
-      hitSlop={4}
+      hitSlop={8}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       style={[

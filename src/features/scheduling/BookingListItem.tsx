@@ -43,6 +43,8 @@ export function BookingListItem({ booking, onPress }: BookingListItemProps) {
     <Pressable
       onPress={() => onPress?.(booking)}
       accessibilityRole="button"
+      accessibilityLabel={`Agendamento ${booking.protocol}, status ${booking.status}`}
+      hitSlop={6}
       style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
     >
       <Card padding="md">

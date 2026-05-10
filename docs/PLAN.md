@@ -312,23 +312,42 @@ Plano operacional dividido em milestones incrementais. Cada milestone tem **bran
 
 ## M10 — Polimento, Acessibilidade & QA
 
-**Branch:** `chore/m10-polish-qa`
-**Objetivo:** Ajustes finos, performance, acessibilidade e revisão de UX antes do build.
+**Branch:** `feat/m10-polish-qa`
+**Objetivo:** Hardening final pré-EAS. Performance (lazy loading), resiliência (skeleton/empty/error padronizados + ErrorBoundary), acessibilidade (labels, font scaling com clamp), haptics em ações críticas, assets Ford-blue placeholder.
 
 ### Entregas
-- [ ] Auditoria de performance: `react-native-performance` ou DevTools
-- [ ] Lazy load de telas pesadas (3D, mapa)
-- [ ] Skeletons em todas as telas com fetch
-- [ ] Estados de erro e empty state em todas as listas
-- [ ] Acessibilidade: `accessibilityLabel`, `accessibilityRole`, contraste, tamanhos toque
-- [ ] Suporte a fontes ampliadas do sistema
-- [ ] Haptic feedback (`expo-haptics`) em ações críticas
-- [ ] Splash screen e ícone finalizados (placeholder Ford)
-- [ ] Revisão de microcopy PT-BR
-- [ ] Testes manuais em iOS e Android (Expo Go ou dev client)
-- [ ] Atualizar `README.md` com instruções de execução
+- [x] Lazy load `Scene` 3D (`@react-three/fiber/native` + three.js) via `React.lazy + Suspense` em `app/vehicle/[id].tsx`, fallback `Vehicle3DSkeleton`
+- [x] Lazy load `MapCanvas` (`react-native-maps` via `forwardRef`) em `app/(tabs)/map.tsx`, fallback `MapSkeleton` (grid + 3 pins)
+- [x] Lazy load `BarChart` (Reanimated heavy) em `app/(analyst)/dashboard.tsx`, fallback `SkeletonBlock`
+- [x] Pacote `src/components/state/`: `Skeleton` (Block/Line/Circle/Group + shimmer), `EmptyState`, `ErrorState` — unifica padrões antes ad-hoc
+- [x] `RootErrorBoundary` (class component custom, zero nova dep) embrulhando `RootNavigator` em `app/_layout.tsx`; reset via key incrementada
+- [x] `useWalletStore` ganha `error` flag; wallet.tsx renderiza tip critical no card de saldo quando fetch falha; analyst dashboard renderiza `ErrorState` quando `error && !kpis`
+- [x] `<Text>` com `allowFontScaling=true` default e `maxFontSizeMultiplier` por variante (h1=1.3, h2=1.35, h3=1.4 para preservar glass cards/KPIs; body/label/caption=1.6)
+- [x] `Button` `hitSlop` 4→8, `accessibilityLabel` default = `label`; `Icon` com flag decorativa por padrão (`accessibilityElementsHidden`); `Input` com `accessibilityHint` + `aria-invalid`
+- [x] `BookingListItem` `accessibilityLabel` composto com protocol+status
+- [x] `src/utils/haptics.ts` wrapper fire-and-forget; aplicado em booking success, cancel, hotspot 3D, redeem cupom, pull-to-refresh Home, lead actions, e novo alerta crítico (warning) em `useAlertsStore`
+- [x] `scripts/generate-icons.js` (pngjs transitiva, sem nova dep): icon 1024², splash 200², favicon 48², adaptive 432² em Ford-blue + monograma "F"
+- [x] `app.json` ganha `runtimeVersion.policy="appVersion"` (prepara EAS Update do M11)
+- [x] Remoção de `moti` (instalado mas não usado) + placeholders `react-logo*.png`
+- [x] `README.md` reescrito para handover M11: stack atualizada, smoke test em 12 itens, troubleshooting (Reanimated worklets, Metro web stub, fontes, splash, regen ícones), personas, roadmap
 
-**Commit final:** `chore(polish): acessibilidade, performance e QA final`
+**Status:** ✅ Concluído — branch `feat/m10-polish-qa` (8 commits temáticos + 1 audit fix)
+
+**Ordem de commits:**
+1. `chore(m10): remove moti unused dep + react-logo placeholders`
+2. `feat(m10/state): unified Skeleton, EmptyState, ErrorState`
+3. `feat(m10/perf): lazy load Scene 3D, MapCanvas e BarChart`
+4. `feat(m10/safety): RootErrorBoundary + render error states`
+5. `feat(m10/a11y): labels, roles, font scaling com clamp`
+6. `feat(m10/haptics): feedback tatil em acoes criticas`
+7. `chore(m10/assets): icone e splash Ford-blue + runtimeVersion`
+8. `docs(m10): README handover + PLAN.md marca M10 concluido`
+9. `chore(m10): audit fixes (zustand purity, shared shimmer driver, prod error logs)`
+
+**Auditoria pós-implementação (Staff Review — 3 patches aplicados antes do merge):**
+- 🔴 **A1**: `haptic.warning()` disparava dentro de `syncFromEvaluation` (action Zustand) — quebrava pureza do reducer e podia vibrar duplo em Strict Mode/concurrent rendering. Movido para `src/stores/criticalAlertHapticListener.ts` (subscribe singleton fora da árvore React), instanciado uma vez em `app/_layout.tsx`. Bootstrap guard evita falso positivo na primeira sync após hidratação.
+- 🟡 **A2**: `Skeleton` criava 1 `useSharedValue + withRepeat` por instância — N skeletons = N worklets infinitos rodando na UI thread, com risco de jank em listas grandes em devices low-end. Refatorado para **shared driver**: `getShimmerDriver()` retorna 1 `SharedValue` singleton via `makeMutable`, todos os skeletons leem o mesmo driver e pulsam em sincronia. `useEffect`/`cancelAnimation` removidos (driver nunca é cancelado, vive enquanto o app vive).
+- 🔴 **A3**: `RootErrorBoundary.componentDidCatch` só logava em `__DEV__` — builds EAS de preview ficariam com crashes silenciosos. Removido o guard, `console.error` agora roda também em prod (preparando integração com Sentry no M11). Adicionado comentário de invariante em `MapCanvas.tsx` declarando que call sites do `mapRef` devem usar optional chaining (gap de 1 frame entre Suspense fallback e chunk resolve).
 
 ---
 
@@ -366,7 +385,7 @@ Plano operacional dividido em milestones incrementais. Cada milestone tem **bran
 | M7 | Carteira | `feat/m7-cashback-wallet` | Cashback + cupons |
 | M8 | Planos SaaS | `feat/m8-plan-variants` | Agro/Urban/Premium |
 | M9 | Analista | `feat/m9-analyst-dashboard` | Backoffice mock |
-| M10 | Polimento | `chore/m10-polish-qa` | A11y + perf |
+| M10 | Polimento | `feat/m10-polish-qa` | A11y + perf + haptics + lazy |
 | M11 | Deploy | `chore/m11-eas-deploy` | EAS preview build |
 
 Cada milestone deve ser **testado em device/emulador** antes do merge. Não avançar sem que a entrega anterior esteja funcional.

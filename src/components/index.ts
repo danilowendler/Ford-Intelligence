@@ -6,3 +6,4 @@ export { Input, type InputProps } from './Input';
 export { Badge, type BadgeProps, type BadgeTone } from './Badge';
 export { Icon, type IconProps, type IconName, type IconColor } from './Icon';
 export { Screen, type ScreenProps } from './Screen';
+export { RootErrorBoundary } from './RootErrorBoundary';
