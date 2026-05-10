@@ -2,6 +2,7 @@ import { Suspense, lazy, useEffect } from 'react';
 import { Alert, RefreshControl, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Badge, Button, Card, Text } from '@/components';
+import { EmptyState, ErrorState } from '@/components/state';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useAnalystStore } from '@/stores/useAnalystStore';
@@ -37,6 +38,7 @@ export default function AnalystDashboard() {
   const leads         = useAnalystStore((s) => s.leads);
   const filters       = useAnalystStore((s) => s.filters);
   const loading       = useAnalystStore((s) => s.loading);
+  const error         = useAnalystStore((s) => s.error);
   const fetchDashboard = useAnalystStore((s) => s.fetchDashboard);
   const setFilter     = useAnalystStore((s) => s.setFilter);
 
@@ -102,6 +104,18 @@ export default function AnalystDashboard() {
           onSelect={(k) => setFilter({ plan: k as PlanFilter })}
         />
       </View>
+
+      {/* Error inicial (sem dados ainda) */}
+      {error && !kpis ? (
+        <Card padding="lg">
+          <ErrorState
+            title="Não foi possível carregar o painel"
+            description={error}
+            onRetry={fetchDashboard}
+            compact
+          />
+        </Card>
+      ) : null}
 
       {/* KPI Grid */}
       {loading && !kpis ? (
@@ -191,11 +205,12 @@ export default function AnalystDashboard() {
           </View>
         ) : leads.length === 0 ? (
           <Card padding="lg">
-            <View style={{ alignItems: 'center', gap: theme.spacing.sm, paddingVertical: theme.spacing.lg }}>
-              <Text variant="body" color="muted">
-                Nenhum lead encontrado para os filtros selecionados.
-              </Text>
-            </View>
+            <EmptyState
+              icon="people-outline"
+              title="Nenhum lead encontrado"
+              description="Nenhum lead corresponde aos filtros selecionados."
+              compact
+            />
           </Card>
         ) : (
           <View style={{ gap: theme.spacing.sm }}>

@@ -20,6 +20,7 @@ import Animated, {
 import { router } from 'expo-router';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { GlassPanel, Icon, Screen, Text } from '@/components';
+import { EmptyState } from '@/components/state';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useWalletStore } from '@/stores/useWalletStore';
 import { usePlanStore } from '@/stores/usePlanStore';
@@ -121,6 +122,7 @@ export default function WalletScreen() {
   const transactions = useWalletStore((s) => s.transactions);
   const coupons = useWalletStore((s) => s.coupons);
   const loading = useWalletStore((s) => s.loading);
+  const error = useWalletStore((s) => s.error);
   const celebrateVisible = useWalletStore((s) => s.celebrateVisible);
   const fetchWalletFn = useWalletStore((s) => s.fetchWallet);
   const fetchCouponsFn = useWalletStore((s) => s.fetchCoupons);
@@ -269,7 +271,11 @@ export default function WalletScreen() {
             >
               R$ {formatBRL(displayBalance)}
             </Text>
-            {loading && displayBalance === 0 ? (
+            {error && balance === 0 ? (
+              <Text variant="caption" color="critical">
+                {error} Puxe para baixo para tentar novamente.
+              </Text>
+            ) : loading && displayBalance === 0 ? (
               <Text variant="caption" color="muted">
                 Carregando...
               </Text>
@@ -366,12 +372,11 @@ export default function WalletScreen() {
             />
           }
           ListEmptyComponent={
-            <View style={{ padding: theme.spacing.xl, alignItems: 'center' }}>
-              <Icon name="receipt-outline" size={40} color="muted" />
-              <Text variant="body" color="muted" style={{ marginTop: theme.spacing.md, textAlign: 'center' }}>
-                Nenhuma transação ainda.{'\n'}Agende um serviço para acumular cashback.
-              </Text>
-            </View>
+            <EmptyState
+              icon="receipt-outline"
+              title="Nenhuma transação ainda"
+              description="Agende um serviço para acumular cashback."
+            />
           }
           contentContainerStyle={{ paddingBottom: tabBarHeight + theme.spacing.lg }}
         />
@@ -395,12 +400,11 @@ export default function WalletScreen() {
             />
           }
           ListEmptyComponent={
-            <View style={{ padding: theme.spacing.xl, alignItems: 'center' }}>
-              <Icon name="pricetag-outline" size={40} color="muted" />
-              <Text variant="body" color="muted" style={{ marginTop: theme.spacing.md, textAlign: 'center' }}>
-                Nenhum cupom disponível{'\n'}para o seu plano no momento.
-              </Text>
-            </View>
+            <EmptyState
+              icon="pricetag-outline"
+              title="Nenhum cupom disponível"
+              description="Para o seu plano no momento."
+            />
           }
         />
       )}
