@@ -264,6 +264,7 @@ const styles = StyleSheet.create({
   // naturalmente. O sheet pai impoe maxHeight 85%, e o overflow:hidden
   // garante que filhos jamais vazem do raio do GlassPanel.
   glass: {
+    flexShrink: 1,
     overflow: 'hidden',
   },
   // List: flexShrink:1 — cresce com o conteudo intrinseco, mas encolhe
