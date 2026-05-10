@@ -7,6 +7,7 @@ import {
   type LoginPayload,
   type SignupPayload,
 } from '@/services/mocks/authApi';
+import { useUserStore } from './useUserStore';
 
 const TOKEN_KEY = 'ford.auth.token';
 const USER_KEY = 'ford.auth.user';
@@ -87,6 +88,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const { token, user } = await signupApi(payload);
       await persistSession(token, user);
+      await useUserStore.getState().clearProfile();
       set({ status: 'authenticated', token, user, error: null });
     } catch (err) {
       const message =
