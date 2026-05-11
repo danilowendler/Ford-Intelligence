@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FlatList, Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutDown } from 'react-native-reanimated';
 import { Button, GlassPanel, Icon, Text } from '@/components';
@@ -20,6 +20,10 @@ export type FuelStationModalProps = {
 export function FuelStationModal({ couponId, onClose, onRedeemed }: FuelStationModalProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  // Pixel-based ceiling — string percentages ('85%') race the Modal's layout
+  // pass on iOS/Android. A concrete number from useWindowDimensions reaches
+  // Yoga before the first measurement, so the sheet always has a hard cap.
+  const { height: windowHeight } = useWindowDimensions();
   const [data, setData] = useState<string | null>(couponId);
   const visible = couponId !== null;
 
@@ -86,22 +90,22 @@ export function FuelStationModal({ couponId, onClose, onRedeemed }: FuelStationM
                 />
               </Animated.View>
 
-              {/* Sheet: overflow:hidden is the key — it turns maxHeight:'85%' into
-                  a hard ceiling that Yoga propagates into the FlatList's scroll height. */}
+              {/* Sheet: pixel maxHeight + overflow:hidden = hard ceiling that
+                  Yoga propagates into the ScrollView's scroll activation. */}
               <Animated.View
                 entering={SlideInDown.duration(280)}
                 exiting={SlideOutDown.duration(EXIT_DURATION_MS - 80)}
                 style={[
                   styles.sheet,
                   {
+                    maxHeight: windowHeight * 0.85,
                     marginHorizontal: theme.spacing.lg,
                     borderRadius: theme.radius.lg,
                     borderColor: theme.colors.border,
                   },
                 ]}
               >
-                {/* Glass background decoupled from content flow so it never
-                    contributes to the Yoga height measurement of the sheet. */}
+                {/* Glass background decoupled from content flow */}
                 <GlassPanel
                   padding="none"
                   intensity={theme.blur.modal}
@@ -109,7 +113,7 @@ export function FuelStationModal({ couponId, onClose, onRedeemed }: FuelStationM
                   style={StyleSheet.absoluteFillObject}
                 />
 
-                {/* Header — intrinsic height */}
+                {/* Header */}
                 <View
                   style={{
                     paddingHorizontal: theme.spacing.xl,
@@ -150,72 +154,77 @@ export function FuelStationModal({ couponId, onClose, onRedeemed }: FuelStationM
                   </Text>
                 </View>
 
-                {/* Station list — flexGrow:0 tells Yoga to size the list from its
-                    content, not from the parent. When that content hits the sheet's
-                    overflow:hidden ceiling, the native ScrollView inside FlatList
-                    activates automatically. */}
-                <FlatList
-                  data={stations}
-                  keyExtractor={(s) => s.id}
-                  style={styles.list}
+                {/* ScrollView in place of FlatList — sheet's pixel ceiling + this
+                    flexShrink make the native ScrollView activate scroll when the
+                    content (header + list + footer) exceeds the cap. No
+                    VirtualizedList measurement race on native. */}
+                <ScrollView
+                  style={styles.scroll}
                   contentContainerStyle={{
                     paddingHorizontal: theme.spacing.xl,
                     paddingBottom: theme.spacing.md,
                   }}
                   showsVerticalScrollIndicator={false}
-                  renderItem={({ item }) => {
-                    const selected = item.id === selectedId;
-                    return (
-                      <Pressable
-                        onPress={() => setSelectedId(item.id)}
-                        style={[
-                          styles.stationRow,
-                          {
-                            borderColor: selected ? theme.plan.accent : theme.colors.border,
-                            borderRadius: theme.radius.md,
-                            padding: theme.spacing.md,
-                            marginBottom: theme.spacing.sm,
-                          },
-                        ]}
-                        accessibilityRole="radio"
-                        accessibilityState={{ checked: selected }}
-                      >
-                        <View
-                          style={[
-                            styles.radio,
-                            {
-                              borderColor: selected ? theme.plan.accent : theme.colors.borderStrong,
-                              backgroundColor: selected ? theme.plan.accent : 'transparent',
-                            },
-                          ]}
-                        >
-                          {selected ? (
-                            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#FFF' }} />
-                          ) : null}
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <Text variant="bodyStrong">{item.name}</Text>
-                          <Text variant="caption" color="muted" numberOfLines={1}>
-                            {item.address}
-                          </Text>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                            <Icon name="location-outline" size={12} color="muted" />
-                            <Text variant="caption" color="muted">
-                              {item.distanceKm.toFixed(1)} km
-                            </Text>
-                          </View>
-                        </View>
-                      </Pressable>
-                    );
-                  }}
-                  ListEmptyComponent={
-                    <Text variant="body" color="muted" style={{ textAlign: 'center', paddingVertical: 16 }}>
+                >
+                  {stations.length === 0 ? (
+                    <Text
+                      variant="body"
+                      color="muted"
+                      style={{ textAlign: 'center', paddingVertical: 16 }}
+                    >
                       Carregando postos...
                     </Text>
-                  }
-                />
+                  ) : (
+                    stations.map((item) => {
+                      const selected = item.id === selectedId;
+                      return (
+                        <Pressable
+                          key={item.id}
+                          onPress={() => setSelectedId(item.id)}
+                          style={[
+                            styles.stationRow,
+                            {
+                              borderColor: selected ? theme.plan.accent : theme.colors.border,
+                              borderRadius: theme.radius.md,
+                              padding: theme.spacing.md,
+                              marginBottom: theme.spacing.sm,
+                            },
+                          ]}
+                          accessibilityRole="radio"
+                          accessibilityState={{ checked: selected }}
+                        >
+                          <View
+                            style={[
+                              styles.radio,
+                              {
+                                borderColor: selected ? theme.plan.accent : theme.colors.borderStrong,
+                                backgroundColor: selected ? theme.plan.accent : 'transparent',
+                              },
+                            ]}
+                          >
+                            {selected ? (
+                              <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#FFF' }} />
+                            ) : null}
+                          </View>
+                          <View style={{ flex: 1 }}>
+                            <Text variant="bodyStrong">{item.name}</Text>
+                            <Text variant="caption" color="muted" numberOfLines={1}>
+                              {item.address}
+                            </Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                              <Icon name="location-outline" size={12} color="muted" />
+                              <Text variant="caption" color="muted">
+                                {item.distanceKm.toFixed(1)} km
+                              </Text>
+                            </View>
+                          </View>
+                        </Pressable>
+                      );
+                    })
+                  )}
+                </ScrollView>
 
-                {/* Footer — intrinsic height, always pinned below the list */}
+                {/* Footer */}
                 <View
                   style={{
                     paddingHorizontal: theme.spacing.xl,
@@ -251,15 +260,14 @@ const styles = StyleSheet.create({
   },
   fill: { flex: 1 },
   sheet: {
-    maxHeight: '85%',
     overflow: 'hidden',
     borderWidth: 1,
   },
-  // flexGrow:0 is the only flex property needed on the list.
-  // It prevents the FlatList from claiming extra space, so the sheet's
-  // overflow:hidden boundary becomes the natural scroll activation point.
-  list: {
-    flexGrow: 0,
+  // flexShrink: 1 lets the ScrollView yield space to header + footer first,
+  // then absorb the remainder under the sheet's pixel ceiling. When its
+  // content exceeds that remainder, native scroll activates.
+  scroll: {
+    flexShrink: 1,
   },
   stationRow: {
     flexDirection: 'row',
