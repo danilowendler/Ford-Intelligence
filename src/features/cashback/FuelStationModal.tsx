@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutDown } from 'react-native-reanimated';
 import { Button, GlassPanel, Icon, Text } from '@/components';
@@ -20,9 +20,8 @@ export type FuelStationModalProps = {
 export function FuelStationModal({ couponId, onClose, onRedeemed }: FuelStationModalProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  // Pixel-based ceiling — string percentages ('85%') race the Modal's layout
-  // pass on iOS/Android. A concrete number from useWindowDimensions reaches
-  // Yoga before the first measurement, so the sheet always has a hard cap.
+  // Altura fixa em pixel — basta para os 4 postos mockados caberem
+  // confortavelmente em qualquer iPhone moderno sem precisar de scroll interno.
   const { height: windowHeight } = useWindowDimensions();
   const [data, setData] = useState<string | null>(couponId);
   const visible = couponId !== null;
@@ -90,15 +89,16 @@ export function FuelStationModal({ couponId, onClose, onRedeemed }: FuelStationM
                 />
               </Animated.View>
 
-              {/* Sheet: pixel maxHeight + overflow:hidden = hard ceiling that
-                  Yoga propagates into the ScrollView's scroll activation. */}
+              {/* Sheet com altura fixa: sem maxHeight, sem flex tricks. Os 4
+                  postos + header + footer cabem confortavelmente dentro de 90%
+                  da janela em qualquer phone alvo. KISS. */}
               <Animated.View
                 entering={SlideInDown.duration(280)}
                 exiting={SlideOutDown.duration(EXIT_DURATION_MS - 80)}
                 style={[
                   styles.sheet,
                   {
-                    maxHeight: windowHeight * 0.85,
+                    height: windowHeight * 0.9,
                     marginHorizontal: theme.spacing.lg,
                     borderRadius: theme.radius.lg,
                     borderColor: theme.colors.border,
@@ -154,17 +154,13 @@ export function FuelStationModal({ couponId, onClose, onRedeemed }: FuelStationM
                   </Text>
                 </View>
 
-                {/* ScrollView in place of FlatList — sheet's pixel ceiling + this
-                    flexShrink make the native ScrollView activate scroll when the
-                    content (header + list + footer) exceeds the cap. No
-                    VirtualizedList measurement race on native. */}
-                <ScrollView
-                  style={styles.scroll}
-                  contentContainerStyle={{
+                {/* Lista: View nativa + .map(). Sem ScrollView, sem FlatList,
+                    sem flex props. Quatro Pressables empilhados naturalmente. */}
+                <View
+                  style={{
                     paddingHorizontal: theme.spacing.xl,
                     paddingBottom: theme.spacing.md,
                   }}
-                  showsVerticalScrollIndicator={false}
                 >
                   {stations.length === 0 ? (
                     <Text
@@ -222,7 +218,7 @@ export function FuelStationModal({ couponId, onClose, onRedeemed }: FuelStationM
                       );
                     })
                   )}
-                </ScrollView>
+                </View>
 
                 {/* Footer */}
                 <View
@@ -262,12 +258,6 @@ const styles = StyleSheet.create({
   sheet: {
     overflow: 'hidden',
     borderWidth: 1,
-  },
-  // flexShrink: 1 lets the ScrollView yield space to header + footer first,
-  // then absorb the remainder under the sheet's pixel ceiling. When its
-  // content exceeds that remainder, native scroll activates.
-  scroll: {
-    flexShrink: 1,
   },
   stationRow: {
     flexDirection: 'row',
