@@ -38,6 +38,7 @@ const VEHICLE_LABELS: Record<VehicleModel, string> = {
   maverick: 'Ford Maverick',
   territory: 'Ford Territory',
   mustang: 'Ford Mustang',
+  raptor: 'Ford F-150 Raptor',
 };
 
 function lowestTirePsi(reading: TelemetryReading | null): number | null {

@@ -1,84 +1,84 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useThree } from '@react-three/fiber/native';
+import { useGLTF } from '@react-three/drei/native';
 import * as THREE from 'three';
 import { useTheme } from '@/theme/ThemeProvider';
 
-const FORD_BLUE = '#1F6FEB';
-const BODY_BLUE = '#1F6FEB';
-const BODY_EMISSIVE = '#0A2050';
-const CABIN_GLASS = '#152033';
-const TIRE_COLOR = '#0A0E14';
-const HEADLIGHT_COLOR = '#FFE9A8';
+const MODEL = require('../../../assets/models/f150_optimized.glb');
 
-type WheelProps = {
-  position: [number, number, number];
-  rimMaterial: THREE.MeshStandardMaterial;
-};
+const TARGET_LENGTH = 4.5;
 
-function Wheel({ position, rimMaterial }: WheelProps) {
-  return (
-    <group position={position}>
-      <mesh rotation={[0, 0, Math.PI / 2]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.42, 0.42, 0.32, 24]} />
-        <meshStandardMaterial color={TIRE_COLOR} roughness={0.95} metalness={0.05} />
-      </mesh>
-      <mesh rotation={[0, 0, Math.PI / 2]} material={rimMaterial} castShadow />
-    </group>
-  );
-}
+// Mesh names from the F150 Raptor GLB receive the plan accent material.
+// Refined after inspecting scene.traverse output: rim/wheel + grille + window trims.
+const ACCENT_MESH_PATTERNS = [/wheel|rim|aro|tire_rim/i, /grille|grade/i, /trim|friso|accent/i];
 
 export function CarMesh() {
   const theme = useTheme();
   const planAccent = theme.plan.accent;
   const { invalidate } = useThree();
-
-  const bodyMaterial = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        color: BODY_BLUE,
-        metalness: 0.3,
-        roughness: 0.5,
-        emissive: BODY_EMISSIVE,
-        emissiveIntensity: 0.3,
-      }),
-    [],
-  );
+  const gltf = useGLTF(MODEL) as unknown as { scene: THREE.Group };
+  const scene = gltf.scene;
 
   const accentMaterial = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
         color: planAccent,
-        metalness: 0.35,
-        roughness: 0.4,
+        metalness: 0.5,
+        roughness: 0.35,
         emissive: planAccent,
-        emissiveIntensity: 0.45,
+        emissiveIntensity: 0.35,
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
 
-  const glassMaterial = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        color: CABIN_GLASS,
-        metalness: 0.4,
-        roughness: 0.25,
-        transparent: true,
-        opacity: 0.85,
-      }),
-    [],
+  const originalMaterialsRef = useRef<Map<THREE.Mesh, THREE.Material | THREE.Material[]>>(
+    new Map(),
   );
 
-  const headlightMaterial = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        color: HEADLIGHT_COLOR,
-        emissive: HEADLIGHT_COLOR,
-        emissiveIntensity: 0.9,
-        roughness: 0.3,
-      }),
-    [],
-  );
+  useEffect(() => {
+    // Rotação 180° em Y: o .glb foi exportado com a frente apontando para -Z;
+    // nossa câmera frontal (preset "front") olha para +Z, então invertemos.
+    scene.rotation.y = Math.PI;
+
+    const box = new THREE.Box3().setFromObject(scene);
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    const maxAxis = Math.max(size.x, size.y, size.z);
+    const k = maxAxis > 0 ? TARGET_LENGTH / maxAxis : 1;
+    scene.scale.setScalar(k);
+    scene.position.set(-center.x * k, -box.min.y * k, -center.z * k);
+
+    const originals = originalMaterialsRef.current;
+    scene.traverse((obj) => {
+      if (!(obj as THREE.Mesh).isMesh) return;
+      const mesh = obj as THREE.Mesh;
+
+      // Sanitiza materiais PBR avançados que o expo-gl não suporta de forma
+      // estável (clearcoat / transmission / iridescence dependem de render
+      // targets extras). Sem isso o WebGLRenderer estoura no setRenderTarget.
+      const sanitize = (m: THREE.Material) => {
+        const phys = m as THREE.MeshPhysicalMaterial;
+        if (phys.isMeshPhysicalMaterial || (m as THREE.MeshStandardMaterial).isMeshStandardMaterial) {
+          if ('clearcoat' in phys) phys.clearcoat = 0;
+          if ('transmission' in phys) phys.transmission = 0;
+          if ('iridescence' in phys) phys.iridescence = 0;
+          if ('sheen' in phys) (phys as unknown as { sheen: number }).sheen = 0;
+          m.needsUpdate = true;
+        }
+      };
+      const mat = mesh.material;
+      if (Array.isArray(mat)) mat.forEach(sanitize);
+      else if (mat) sanitize(mat);
+
+      const isAccent = ACCENT_MESH_PATTERNS.some((re) => re.test(mesh.name));
+      if (isAccent && !originals.has(mesh)) {
+        originals.set(mesh, mesh.material);
+        mesh.material = accentMaterial;
+      }
+    });
+    invalidate();
+  }, [scene, accentMaterial, invalidate]);
 
   useEffect(() => {
     accentMaterial.color.set(planAccent);
@@ -87,89 +87,20 @@ export function CarMesh() {
   }, [planAccent, accentMaterial, invalidate]);
 
   useEffect(() => {
+    const originals = originalMaterialsRef.current;
     return () => {
-      bodyMaterial.dispose();
+      // Restore originals so the cached GLB scene from drei stays pristine for
+      // future mounts. We only dispose the material we instantiated here — the
+      // GLB-owned geometries/materials live in THREE.Cache.
+      originals.forEach((mat, mesh) => {
+        mesh.material = mat;
+      });
+      originals.clear();
       accentMaterial.dispose();
-      glassMaterial.dispose();
-      headlightMaterial.dispose();
     };
-  }, [bodyMaterial, accentMaterial, glassMaterial, headlightMaterial]);
+  }, [accentMaterial]);
 
-  return (
-    <group>
-      <mesh position={[0, 0.65, 0]} material={bodyMaterial} castShadow receiveShadow>
-        <boxGeometry args={[2.05, 0.4, 4.45]} />
-      </mesh>
-
-      <mesh position={[0, 0.95, 0]} material={bodyMaterial} castShadow receiveShadow>
-        <boxGeometry args={[2.0, 0.5, 4.4]} />
-      </mesh>
-
-      <mesh position={[0, 1.18, 1.45]} material={accentMaterial} castShadow>
-        <boxGeometry args={[1.85, 0.12, 1.55]} />
-      </mesh>
-
-      <mesh position={[0, 1.18, -1.55]} material={bodyMaterial} castShadow>
-        <boxGeometry args={[1.85, 0.12, 1.35]} />
-      </mesh>
-
-      <mesh position={[0, 1.45, -0.2]} material={glassMaterial} castShadow>
-        <boxGeometry args={[1.78, 0.55, 2.35]} />
-      </mesh>
-
-      <mesh position={[0, 1.05, 2.22]}>
-        <boxGeometry args={[1.95, 0.18, 0.05]} />
-        <meshStandardMaterial
-          color={FORD_BLUE}
-          emissive={FORD_BLUE}
-          emissiveIntensity={0.6}
-          roughness={0.3}
-        />
-      </mesh>
-
-      <mesh position={[0, 0.78, -2.225]} material={accentMaterial} castShadow>
-        <boxGeometry args={[1.6, 0.06, 0.04]} />
-      </mesh>
-
-      <mesh position={[-0.65, 1.05, 2.21]} material={headlightMaterial}>
-        <boxGeometry args={[0.45, 0.14, 0.08]} />
-      </mesh>
-      <mesh position={[0.65, 1.05, 2.21]} material={headlightMaterial}>
-        <boxGeometry args={[0.45, 0.14, 0.08]} />
-      </mesh>
-
-      <mesh position={[-0.6, 1.05, -2.21]}>
-        <boxGeometry args={[0.45, 0.14, 0.08]} />
-        <meshStandardMaterial
-          color="#E5484D"
-          emissive="#E5484D"
-          emissiveIntensity={0.7}
-          roughness={0.3}
-        />
-      </mesh>
-      <mesh position={[0.6, 1.05, -2.21]}>
-        <boxGeometry args={[0.45, 0.14, 0.08]} />
-        <meshStandardMaterial
-          color="#E5484D"
-          emissive="#E5484D"
-          emissiveIntensity={0.7}
-          roughness={0.3}
-        />
-      </mesh>
-
-      <Wheel position={[-1.05, 0.42, 1.45]} rimMaterial={accentMaterial} />
-      <Wheel position={[1.05, 0.42, 1.45]} rimMaterial={accentMaterial} />
-      <Wheel position={[-1.05, 0.42, -1.45]} rimMaterial={accentMaterial} />
-      <Wheel position={[1.05, 0.42, -1.45]} rimMaterial={accentMaterial} />
-
-      <mesh
-        position={[0, 0, 0]}
-        rotation={[-Math.PI / 2, 0, 0]}
-        receiveShadow
-      >
-        <circleGeometry args={[5, 48]} />
-        <meshStandardMaterial color="#0A0E14" roughness={1} metalness={0} />
-      </mesh>
-    </group>
-  );
+  return <primitive object={scene} />;
 }
+
+useGLTF.preload(MODEL);

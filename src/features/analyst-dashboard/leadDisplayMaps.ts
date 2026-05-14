@@ -7,6 +7,7 @@ export const VEHICLE_LABEL: Record<Lead['vehicleModel'], string> = {
   maverick: 'Maverick',
   territory: 'Territory',
   mustang: 'Mustang',
+  raptor: 'F-150 Raptor',
 };
 
 export const PLAN_LABEL: Record<Lead['plan'], string> = {

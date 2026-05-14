@@ -9,6 +9,7 @@ export const vehicleCatalog: Record<
   maverick: { label: 'Maverick', tagline: 'Picape compacta', segment: 'Versátil' },
   territory: { label: 'Territory', tagline: 'SUV familiar', segment: 'Urbano' },
   mustang: { label: 'Mustang', tagline: 'Esportivo icônico', segment: 'Performance' },
+  raptor: { label: 'F-150 Raptor', tagline: 'Off-road extremo', segment: 'Performance' },
 };
 
 export const usageCatalog: Record<UsageStyle, { label: string; description: string }> = {
