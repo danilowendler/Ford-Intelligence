@@ -144,7 +144,7 @@ export function VoiceCommandFab() {
       >
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Comando de voz Premium"
+          accessibilityLabel="Assistente Premium"
           onPress={handleFabPress}
           style={({ pressed }) => [
             styles.fab,
@@ -157,7 +157,7 @@ export function VoiceCommandFab() {
             },
           ]}
         >
-          <Icon name="mic" size={24} color="inverse" />
+          <Icon name="sparkles" size={24} color="inverse" />
         </Pressable>
       </View>
 
@@ -218,7 +218,7 @@ function ListeningPanel({ pulse, busy, onCommand, onClose }: ListeningPanelProps
             { backgroundColor: theme.plan.accentSoft, borderColor: theme.plan.accent },
           ]}
         >
-          <Icon name="mic" size={42} color="accent" />
+          <Icon name="sparkles" size={42} color="accent" />
         </Animated.View>
         <View style={{ gap: theme.spacing.xs, alignItems: 'center' }}>
           <Text variant="h2">O que você precisa?</Text>
