@@ -15,6 +15,7 @@ type SchedulingState = {
   resetDraft: () => void;
   commitBooking: (booking: Booking) => Promise<void>;
   cancelBooking: (id: string) => Promise<void>;
+  clearBookings: () => Promise<void>;
 };
 
 export const useSchedulingStore = create<SchedulingState>((set, get) => ({
@@ -53,5 +54,10 @@ export const useSchedulingStore = create<SchedulingState>((set, get) => ({
     );
     await AsyncStorage.setItem(BOOKINGS_KEY, JSON.stringify(next));
     set({ bookings: next });
+  },
+
+  clearBookings: async () => {
+    await AsyncStorage.removeItem(BOOKINGS_KEY);
+    set({ bookings: [] });
   },
 }));

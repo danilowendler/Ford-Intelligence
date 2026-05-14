@@ -21,6 +21,7 @@ export default function ProfileScreen() {
   const updatePlan = useUserStore((s) => s.updatePlan);
   const bookings = useSchedulingStore((s) => s.bookings);
   const cancelBooking = useSchedulingStore((s) => s.cancelBooking);
+  const clearBookings = useSchedulingStore((s) => s.clearBookings);
   const tabBarHeight = useBottomTabBarHeight();
   const [signingOut, setSigningOut] = useState(false);
   const [switchingPlan, setSwitchingPlan] = useState<PlanId | null>(null);
@@ -90,6 +91,30 @@ export default function ProfileScreen() {
         onPress: () => {
           haptic.medium();
           cancelBooking(booking.id);
+        },
+      },
+    ]);
+  };
+
+  const confirmClearHistory = () => {
+    if (bookings.length === 0) return;
+    const message = `Apagar todos os ${bookings.length} agendamentos do histórico? Esta ação não pode ser desfeita.`;
+    if (Platform.OS === 'web') {
+      const ok = typeof window !== 'undefined' && window.confirm(message);
+      if (ok) {
+        haptic.medium();
+        clearBookings();
+      }
+      return;
+    }
+    Alert.alert('Limpar histórico', message, [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Limpar tudo',
+        style: 'destructive',
+        onPress: () => {
+          haptic.medium();
+          clearBookings();
         },
       },
     ]);
@@ -202,9 +227,30 @@ export default function ProfileScreen() {
       <View style={{ gap: theme.spacing.sm }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <Text variant="h3">Meus agendamentos</Text>
-          {activeBookings.length > 0 ? (
-            <Badge label={`${activeBookings.length} ativos`} tone="info" />
-          ) : null}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
+            {activeBookings.length > 0 ? (
+              <Badge label={`${activeBookings.length} ativos`} tone="info" />
+            ) : null}
+            {bookings.length > 0 ? (
+              <Pressable
+                onPress={confirmClearHistory}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Limpar histórico de agendamentos"
+                style={({ pressed }) => ({
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 4,
+                  paddingHorizontal: theme.spacing.xs,
+                  paddingVertical: theme.spacing.xs,
+                  opacity: pressed ? 0.6 : 1,
+                })}
+              >
+                <Icon name="trash-outline" size={16} color="muted" />
+                <Text variant="caption" color="muted">Limpar</Text>
+              </Pressable>
+            ) : null}
+          </View>
         </View>
 
         {bookings.length === 0 ? (
