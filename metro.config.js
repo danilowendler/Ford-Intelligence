@@ -3,6 +3,8 @@ const path = require('path');
 
 const config = getDefaultConfig(__dirname);
 
+config.resolver.assetExts = [...config.resolver.assetExts, 'glb', 'gltf'];
+
 const stubPath = path.resolve(__dirname, 'src/shims/empty.js');
 
 const originalResolver = config.resolver.resolveRequest;

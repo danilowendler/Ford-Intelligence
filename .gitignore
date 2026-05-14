@@ -48,3 +48,6 @@ app-example
 .vscode/
 .idea/
 .claude/
+
+# Raw 3D assets (source GLB + textures before optimization). Only assets/models/ is committed.
+_raw_models/

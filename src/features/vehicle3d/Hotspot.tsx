@@ -1,7 +1,6 @@
 import { useEffect, useRef, type MutableRefObject } from 'react';
 import { useFrame } from '@react-three/fiber/native';
 import * as THREE from 'three';
-import { useTheme } from '@/theme/ThemeProvider';
 import type { HotspotCategory, HotspotSeverity } from './derive';
 
 const COLORS: Record<HotspotSeverity, string> = {
@@ -26,12 +25,12 @@ export type HotspotProps = {
 };
 
 export function Hotspot({ category, severity, position, registry }: HotspotProps) {
-  const theme = useTheme();
-  const meshRef = useRef<THREE.Mesh | null>(null);
+  const hitboxRef = useRef<THREE.Mesh | null>(null);
   const haloRef = useRef<THREE.Mesh | null>(null);
+  const isActive = severity !== 'idle';
 
   useEffect(() => {
-    const mesh = meshRef.current;
+    const mesh = hitboxRef.current;
     if (!mesh) return;
     mesh.userData.hotspotCategory = category;
     registry.current.push(mesh);
@@ -40,53 +39,41 @@ export function Hotspot({ category, severity, position, registry }: HotspotProps
     };
   }, [category, registry]);
 
-  useEffect(() => {
-    if (severity === 'idle' && meshRef.current) {
-      meshRef.current.scale.setScalar(1);
-    }
-  }, [severity]);
-
   useFrame((state) => {
-    if (severity === 'idle') return;
+    if (!isActive) return;
+    const halo = haloRef.current;
+    if (!halo) return;
     const t = state.clock.elapsedTime;
     const speed = PULSE_SPEED[severity];
-    const pulse = 1 + Math.sin(t * speed) * 0.18;
-    if (meshRef.current) {
-      meshRef.current.scale.setScalar(pulse);
-    }
-    if (haloRef.current) {
-      const haloScale = 1.2 + (Math.sin(t * speed) + 1) * 0.6;
-      haloRef.current.scale.setScalar(haloScale);
-      const mat = haloRef.current.material as THREE.MeshBasicMaterial;
-      mat.opacity = 0.35 - (Math.sin(t * speed) + 1) * 0.12;
-    }
+    const wave = Math.sin(t * speed);
+    const haloScale = 1.2 + (wave + 1) * 0.6;
+    halo.scale.setScalar(haloScale);
+    const mat = halo.material as THREE.MeshBasicMaterial;
+    mat.opacity = 0.45 - (wave + 1) * 0.15;
   });
 
-  const color = COLORS[severity];
-  const isActive = severity !== 'idle';
-  const haloColor = isActive ? color : theme.plan.accent;
+  const haloColor = COLORS[severity];
 
   return (
     <group position={position}>
-      <mesh ref={meshRef}>
-        <sphereGeometry args={[BASE_RADIUS, 20, 20]} />
-        <meshStandardMaterial
-          color={color}
-          emissive={color}
-          emissiveIntensity={isActive ? 1.2 : 0.4}
-          roughness={0.3}
-          metalness={0.1}
-        />
+      {/* Hitbox invisível: raycaster do three.js continua intersectando mesh
+          com visible={false}. Mantém a área de toque sem poluir o modelo. */}
+      <mesh ref={hitboxRef} visible={false}>
+        <sphereGeometry args={[BASE_RADIUS, 12, 12]} />
+        <meshBasicMaterial />
       </mesh>
-      <mesh ref={haloRef}>
-        <sphereGeometry args={[BASE_RADIUS * 1.6, 16, 16]} />
-        <meshBasicMaterial
-          color={haloColor}
-          transparent
-          opacity={isActive ? 0.25 : 0.18}
-          depthWrite={false}
-        />
-      </mesh>
+
+      {isActive && (
+        <mesh ref={haloRef}>
+          <sphereGeometry args={[BASE_RADIUS * 1.6, 16, 16]} />
+          <meshBasicMaterial
+            color={haloColor}
+            transparent
+            opacity={0.3}
+            depthWrite={false}
+          />
+        </mesh>
+      )}
     </group>
   );
 }

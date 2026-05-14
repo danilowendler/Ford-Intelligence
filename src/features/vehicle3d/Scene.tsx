@@ -99,7 +99,6 @@ function SceneContent({
         position={[6, 8, 4]}
         intensity={1.0}
         color="#FFFFFF"
-        castShadow
       />
       <directionalLight position={[-5, 4, -3]} intensity={0.75} color="#1F6FEB" />
       <directionalLight position={[-3, 2, 5]} intensity={0.45} color="#FFFFFF" />
@@ -267,7 +266,7 @@ export function Scene({
           frameloop={frameloop}
           gl={{ antialias: true, alpha: true }}
           camera={{ fov: 35, near: 0.1, far: 100, position: orbitToPosition(DEFAULT_ORBIT) }}
-          shadows
+          shadows={false}
         >
           <SceneContent
             hotspots={hotspots}

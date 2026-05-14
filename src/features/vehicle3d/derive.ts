@@ -25,18 +25,22 @@ const ENGINE_TEMP_WARN = 100;
 const ENGINE_TEMP_CRITICAL = 108;
 const BATTERY_LOW_VOLTS = 11.8;
 
+// TODO: Fine-tune decimal das coordenadas no emulador. Valores provisórios
+// espalham os hotspots em torno do GLB F150 Raptor após normalização em CarMesh.
 const TIRE_POSITIONS: Record<
   'tire-fl' | 'tire-fr' | 'tire-rl' | 'tire-rr',
   [number, number, number]
 > = {
-  'tire-fl': [-1.05, 0.55, 1.45],
-  'tire-fr': [1.05, 0.55, 1.45],
-  'tire-rl': [-1.05, 0.55, -1.45],
-  'tire-rr': [1.05, 0.55, -1.45],
+  'tire-fl': [-0.7, 0.5, 1.5],
+  'tire-fr': [0.7, 0.5, 1.6],
+  'tire-rl': [-0.7, 0.5, -1.2],
+  'tire-rr': [0.7, 0.5, -1.25],
 };
 
-const ENGINE_POSITION: [number, number, number] = [-0.4, 1.05, 1.95];
-const BATTERY_POSITION: [number, number, number] = [0.55, 1.05, 1.85];
+// TODO: Fine-tune motor (capô) no emulador.
+const ENGINE_POSITION: [number, number, number] = [-0.1, 1, 1.9];
+// TODO: Fine-tune bateria no emulador.
+const BATTERY_POSITION: [number, number, number] = [0.45, 1.0, 1.8];
 
 function tireSeverity(psi: number): HotspotSeverity {
   if (psi < TIRE_LOW_PSI - 2 || psi > TIRE_HIGH_PSI + 2) return 'critical';

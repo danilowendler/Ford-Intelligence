@@ -21,7 +21,7 @@ export interface BarPoint {
   conversions: number;
 }
 
-export type VehicleModel = 'ranger' | 'maverick' | 'territory' | 'mustang';
+export type VehicleModel = 'ranger' | 'maverick' | 'territory' | 'mustang' | 'raptor';
 export type LeadPlan = 'agro' | 'urban' | 'premium';
 export type RiskLabel = 'baixo' | 'moderado' | 'alto';
 export type LeadStatus = 'novo' | 'contactado' | 'convertido' | 'perdido';

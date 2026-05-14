@@ -5,7 +5,7 @@ import type { PlanId } from '@/theme/plans';
 const PROFILE_KEY = 'ford.user.profile';
 const ONBOARDING_FLAG = 'ford.onboarding.complete';
 
-export const vehicleModels = ['ranger', 'maverick', 'territory', 'mustang'] as const;
+export const vehicleModels = ['ranger', 'maverick', 'territory', 'mustang', 'raptor'] as const;
 export type VehicleModel = (typeof vehicleModels)[number];
 
 export const usageStyles = ['urban', 'rural', 'mixed', 'performance'] as const;
